@@ -70,12 +70,12 @@ int main(void)
     //test_data = { 0x00400005, 0x63BE80FC, 0x00001F23, 0x00005F42, 0x800103E9, 0x80C80000 };
     
     unsigned int* test_data = (unsigned int*)malloc(sizeof(unsigned int)*6);
-    test_data[0] = 0x00400005;
-    test_data[1] = 0x63BE80E4;
-    test_data[2] = 0x00001F23;
-    test_data[3] = 0x00005F42;
-    test_data[4] = 0x800103E9;
-    test_data[5] = 0x80C80000;
+    test_data[0] = 0x80C90000;
+    test_data[1] = 0x800103E9;
+    test_data[2] = 0x00005F42;
+    test_data[3] = 0x00001F23;
+    test_data[4] = 0x63BE80E4;
+    test_data[5] = 0x00400005;
     
   /* USER CODE END 1 */
   
@@ -118,6 +118,13 @@ int main(void)
         plo_write_all(test_data, PLO_INIT);
         plo_write_all(test_data, PLO_INIT);
         plo_write_all(test_data, PLO_OUT_ENABLE);
+        plo_new_data=PLO_DATA_SENDED;
+    }
+    else if (plo_new_data == PLO_CHANGED_REGISTER)
+    {
+        HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+        plo_write_register(global_new_register_value);
         plo_new_data=PLO_DATA_SENDED;
     }
 

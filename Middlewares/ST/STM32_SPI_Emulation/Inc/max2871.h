@@ -13,6 +13,7 @@
 typedef enum{
     PLO_INIT,
     PLO_OUT_ENABLE,
+    PLO_CHANGED_REGISTER,
     PLO_DATA_SENDED
 }plo_new_data_t;
 
@@ -22,6 +23,7 @@ extern volatile plo_new_data_t plo_new_data;
 
 //extern void dds_init(void);
 extern void plo_write_all(unsigned int *max2871, plo_new_data_t plo_write_type);
+extern void plo_write_register(unsigned int register_data);
 //extern void dds_set_freq(unsigned long new_freq);
 
 #endif

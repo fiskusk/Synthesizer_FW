@@ -68,7 +68,7 @@ uint8_t buffer[7];
 /* It's up to user to redefine and/or remove those define */
 #define APP_RX_DATA_SIZE    500
 #define APP_TX_DATA_SIZE    500
-#define CMD_BUFFER_LEN      10
+#define CMD_BUFFER_LEN      30
 /* USER CODE END PRIVATE_DEFINES */
 
 /**
@@ -324,28 +324,45 @@ static void usb_data_avaible(uint8_t c)
     if (cnt < CMD_BUFFER_LEN) data[cnt++] = c;
     if (c == '\n' || c == '\r')
     {
-        data[cnt] = '\0';
+        for (uint8_t i = 0; i < cnt; i++)
+        {
+            data[i] = (data[i] < 32 || data[i] > 126) ? '\0' : data[i];
+        }
         usb_process_command(data, cnt);
         cnt = 0;
     }
+}
 
+uint32_t hex2int(char *hex) {
+    uint32_t val = 0;
+    while (*hex) {
+        // get current character then increment
+        uint8_t byte = *hex++; 
+        // transform hex character to the 4bit equivalent number, using the ascii table indexes
+        if (byte >= '0' && byte <= '9') byte = byte - '0';
+        else if (byte >= 'a' && byte <='f') byte = byte - 'a' + 10;
+        else if (byte >= 'A' && byte <='F') byte = byte - 'A' + 10;    
+        // shift 4 to make space for new digit, and add the 4 bits of the new digit 
+        val = (val << 4) | (byte & 0xF);
+    }
+    return val;
 }
 
 void usb_process_command(char *data, uint8_t len)
 {
     char *token;
     char *sub_token;
-    char *command;
+    char *value;
     token = strtok(data, " ");
 
     if (strcasecmp(token, "ref") == 0)
     {
-        command = strtok(NULL, " ");
-        if (strcasecmp(command, "ext\r") == 0) {
+        value = strtok(NULL, " ");
+        if (strcasecmp(value, "ext") == 0) {
             HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
         }
 
-        if (strcasecmp(command, "int\r") == 0) {
+        if (strcasecmp(value, "int") == 0) {
             HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_RESET);
         }
     }
@@ -353,18 +370,18 @@ void usb_process_command(char *data, uint8_t len)
     if (strcasecmp(token, "out") == 0)
     {
         sub_token = strtok(NULL, " ");
-        command = strtok(NULL, " ");
+        value = strtok(NULL, " ");
         if (strcasecmp(sub_token, "1") == 0) {
-            if (strcasecmp(command, "on\r") == 0)
+            if (strcasecmp(value, "on") == 0)
                 HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_RESET);
-            else if (strcasecmp(command, "off\r") == 0)
+            else if (strcasecmp(value, "off") == 0)
                 HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_SET);
         }
 
         if (strcasecmp(sub_token, "2") == 0) {
-            if (strcasecmp(command, "on\r") == 0)
+            if (strcasecmp(value, "on") == 0)
                 HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
-            else if (strcasecmp(command, "off\r") == 0)
+            else if (strcasecmp(value, "off") == 0)
                 HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET);
         }
     }
@@ -372,10 +389,18 @@ void usb_process_command(char *data, uint8_t len)
     if (strcasecmp(token, "plo") == 0)
     {
         sub_token = strtok(NULL, " ");
-        if (strcasecmp(sub_token, "init\r") == 0)
+        value = strtok(NULL, " ");
+        if (strcasecmp(sub_token, "init") == 0)
         {
             plo_new_data = PLO_INIT;
         }
+
+        if (strcasecmp(sub_token, "set_register") == 0)
+        {
+            global_new_register_value = hex2int(value);
+            plo_new_data = PLO_CHANGED_REGISTER;
+        }
+
     }
 }
 

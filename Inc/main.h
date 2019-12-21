@@ -42,7 +42,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+unsigned int global_new_register_value;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

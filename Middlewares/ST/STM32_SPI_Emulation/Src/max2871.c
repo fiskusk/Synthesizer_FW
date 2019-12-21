@@ -72,14 +72,14 @@ void plo_write_register(unsigned int register_data)
 /*************************************************************************/
 void plo_write_all(unsigned int *max2871, plo_new_data_t plo_write_type)
 {
-    for (uint8_t i = 0; i < 6; i++) {
+    for (int8_t i = 5; i >= 0; i--) {
         if (plo_write_type == PLO_OUT_ENABLE)
         {
-            i=1;
+            i=4;
         }
 
         uint32_t c = max2871[i];
-        if ((plo_write_type == PLO_INIT) && (i==1))
+        if ((plo_write_type == PLO_INIT) && (i==4))
         {
             c &= ~((1UL << 5) | (1UL << 9 ));
         }
@@ -87,11 +87,11 @@ void plo_write_all(unsigned int *max2871, plo_new_data_t plo_write_type)
 
         plo_spi_emul(c);
 
-        if ((plo_write_type == PLO_INIT) && (i==0))
+        if ((plo_write_type == PLO_INIT) && (i==5))
             HAL_Delay(20);
 
         if (plo_write_type == PLO_OUT_ENABLE)
-            i=6;
+            i=-1;
     }  
 }
     /*union {

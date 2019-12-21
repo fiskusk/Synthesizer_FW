@@ -115,9 +115,9 @@ int main(void)
         // toggle pin for trigger logic analyzer
         HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
         HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-        plo_write(test_data, PLO_INIT);
-        plo_write(test_data, PLO_INIT);
-        plo_write(test_data, PLO_OUT_ENABLE);
+        plo_write_all(test_data, PLO_INIT);
+        plo_write_all(test_data, PLO_INIT);
+        plo_write_all(test_data, PLO_OUT_ENABLE);
         plo_new_data=PLO_DATA_SENDED;
     }
 

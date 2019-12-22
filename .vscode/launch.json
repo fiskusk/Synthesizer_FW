@@ -6,6 +6,7 @@
           "request": "launch",
           "servertype": "openocd",
           "cwd": "${workspaceRoot}",
+          "preLaunchTask": "make",
           "executable": "C:/Users/Uzivatel/Documents/_diplomka/Synthesizer_FW/build/Synthesizer_FW_control.elf",
           "name": "Debug (OpenOCD)",
           "device": "STM32F042F6",

@@ -20,6 +20,11 @@
                 "$gcc"
             ],
             "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make",
+            "command": "make"
         }
     ]
 }

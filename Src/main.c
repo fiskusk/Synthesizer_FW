@@ -70,7 +70,7 @@ int main(void)
     //test_data = { 0x00400005, 0x63BE80FC, 0x00001F23, 0x00005F42, 0x800103E9, 0x80C80000 };
     
     unsigned int* test_data = (unsigned int*)malloc(sizeof(unsigned int)*6);
-    test_data[0] = 0x80C90000;
+    test_data[0] = 0x80C80000;
     test_data[1] = 0x800103E9;
     test_data[2] = 0x00005F42;
     test_data[3] = 0x00001F23;
@@ -110,6 +110,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+
+    // TODO odeslat informaci o zaveseni
     if (plo_new_data == PLO_INIT)
     {
         // toggle pin for trigger logic analyzer

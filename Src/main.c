@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "tim.h"
 #include "usb_device.h"
 #include "gpio.h"
 
@@ -56,7 +57,13 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim -> Instance == TIM3)
+    {
+        HAL_GPIO_TogglePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin);
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -69,7 +76,7 @@ int main(void)
     //uint32_t test_data[6];
     //test_data = { 0x00400005, 0x63BE80FC, 0x00001F23, 0x00005F42, 0x800103E9, 0x80C80000 };
     
-    unsigned int* test_data = (unsigned int*)malloc(sizeof(unsigned int)*6);
+    uint32_t* test_data = (uint32_t*)malloc(sizeof(uint32_t)*6);
     test_data[0] = 0x80C80000;
     test_data[1] = 0x800103E9;
     test_data[2] = 0x00005F42;
@@ -99,8 +106,9 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-
+    HAL_TIM_Base_Start_IT(&htim3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -110,7 +118,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
 
     // TODO odeslat informaci o zaveseni
     if (plo_new_data == PLO_INIT)

@@ -20,6 +20,7 @@
         "random": "c",
         "usbd_cdc_if.h": "c",
         "gpio.h": "c",
-        "stm32f0xx_hal.h": "c"
+        "stm32f0xx_hal.h": "c",
+        "stm32f0xx_it.h": "c"
     }
 }

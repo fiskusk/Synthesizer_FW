@@ -283,7 +283,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
     //usb_data_avaible(Buf[0]);    
     for (uint8_t i = 0; i < *Len; i++)
     {
-        usb_data_avaible(Buf[i]);
+        usb_data_avaible(Buf[i]);       // TODO vymyslet DMA pro USB
     }
 
     return (USBD_OK);

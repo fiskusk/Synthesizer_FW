@@ -44,8 +44,9 @@ uint32_t lsb_to_msb_bit_reversal(uint32_t input)
     return ((input >> 16) | (input << 16));
 }
 
-void plo_spi_emul(unsigned int data)
+void plo_spi_emul(uint32_t data)
 {
+    __disable_irq();
     for (uint8_t j = 0; j < 32; j++) {
             if (data & 0x01)
                 HAL_GPIO_WritePin(PLO_DATA_GPIO_Port, PLO_DATA_Pin, GPIO_PIN_SET);
@@ -60,9 +61,13 @@ void plo_spi_emul(unsigned int data)
         // generate update pulse
         HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
         HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+        // set down all wires
+        HAL_GPIO_WritePin(PLO_DATA_GPIO_Port, PLO_DATA_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(PLO_CLK_GPIO_Port, PLO_CLK_Pin, GPIO_PIN_RESET);
+        __enable_irq();
 }
 
-void plo_write_register(unsigned int register_data)
+void plo_write_register(uint32_t register_data)
 {
     register_data = lsb_to_msb_bit_reversal(register_data);
 
@@ -70,7 +75,7 @@ void plo_write_register(unsigned int register_data)
 }
 
 /*************************************************************************/
-void plo_write_all(unsigned int *max2871, plo_new_data_t plo_write_type)
+void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)
 {
     for (int8_t i = 5; i >= 0; i--) {
         if (plo_write_type == PLO_OUT_ENABLE)

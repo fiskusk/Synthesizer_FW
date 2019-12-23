@@ -283,7 +283,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
     //usb_data_avaible(Buf[0]);    
     for (uint8_t i = 0; i < *Len; i++)
     {
-        usb_data_avaible(Buf[i]);       // TODO vymyslet DMA pro USB
+        usb_data_avaible(Buf[i]);
     }
 
     return (USBD_OK);
@@ -318,91 +318,85 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
 static void usb_data_avaible(uint8_t c)
 {
-    static uint16_t cnt;
-    static char data[CMD_BUFFER_LEN];
-
-    if (cnt < CMD_BUFFER_LEN) data[cnt++] = c;
-    if (c == '\n' || c == '\r')
+    static uint16_t cnt1;
+    static uint16_t cnt2;
+    static uint16_t cnt3;
+    static uint16_t cnt4;
+    // prvni buffer je volny, pis do nej
+    if (proccesing_command_1 == false)
     {
-        for (uint8_t i = 0; i < cnt; i++)
+        // else indikuje chybu, ze doslo k preteceni vstupniho bufferu, nahodi ext ref signal input
+        if (cnt1 < CMD_BUFFER_LEN) 
+            command_data_1[cnt1++] = c; 
+        else 
+            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET); 
+        // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
+        if (c == '\n' || c == '\r')
         {
-            data[i] = (data[i] < 32 || data[i] > 126) ? '\0' : data[i];
+            proccesing_command_1 = true;
+            cnt1 = 0;
+            plo_new_data = PLO_NEW_DATA;
+            return;
         }
-        usb_process_command(data, cnt);
-        cnt = 0;
     }
-}
-
-uint32_t hex2int(char *hex) {
-    uint32_t val = 0;
-    while (*hex) {
-        // get current character then increment
-        uint8_t byte = *hex++; 
-        // transform hex character to the 4bit equivalent number, using the ascii table indexes
-        if (byte >= '0' && byte <= '9') byte = byte - '0';
-        else if (byte >= 'a' && byte <='f') byte = byte - 'a' + 10;
-        else if (byte >= 'A' && byte <='F') byte = byte - 'A' + 10;    
-        // shift 4 to make space for new digit, and add the 4 bits of the new digit 
-        val = (val << 4) | (byte & 0xF);
-    }
-    return val;
-}
-
-void usb_process_command(char *data, uint8_t len)
-{
-    char *token;
-    char *sub_token;
-    char *value;
-    token = strtok(data, " ");
-
-    if (strcasecmp(token, "ref") == 0)
+    // kdyz je prvni zpracovavan, pis do druheho
+    else if (proccesing_command_2 == false)
     {
-        value = strtok(NULL, " ");
-        if (strcasecmp(value, "ext") == 0) {
+        // else indikuje chybu, ze doslo k preteceni vstupniho bufferu, nahodi ext ref signal input
+        if (cnt2 < CMD_BUFFER_LEN) 
+            command_data_2[cnt2++] = c; 
+        else 
             HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
-        }
-
-        if (strcasecmp(value, "int") == 0) {
-            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_RESET);
+        // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
+        if (c == '\n' || c == '\r')
+        {
+            proccesing_command_2 = true;
+            cnt2 = 0;
+            plo_new_data = PLO_NEW_DATA;
+            return;
         }
     }
-
-    if (strcasecmp(token, "out") == 0)
+    // treti buffer pro pripad, ze ani druhý se nestihl vycist
+    else if (proccesing_command_3 == false)
     {
-        sub_token = strtok(NULL, " ");
-        value = strtok(NULL, " ");
-        if (strcasecmp(sub_token, "1") == 0) {
-            if (strcasecmp(value, "on") == 0)
-                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_RESET);
-            else if (strcasecmp(value, "off") == 0)
-                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_SET);
-        }
-
-        if (strcasecmp(sub_token, "2") == 0) {
-            if (strcasecmp(value, "on") == 0)
-                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
-            else if (strcasecmp(value, "off") == 0)
-                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET);
+        // else indikuje chybu, ze doslo k preteceni vstupniho bufferu, nahodi ext ref signal input
+        if (cnt3 < CMD_BUFFER_LEN) 
+            command_data_3[cnt3++] = c; 
+        else 
+            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
+        // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
+        if (c == '\n' || c == '\r')
+        {
+            proccesing_command_3 = true;
+            cnt3 = 0;
+            plo_new_data = PLO_NEW_DATA;
+            return;
         }
     }
-    
-    if (strcasecmp(token, "plo") == 0)
+    // ctvrty buffer 
+    else if (proccesing_command_4 == false)
     {
-        sub_token = strtok(NULL, " ");
-        value = strtok(NULL, " ");
-        if (strcasecmp(sub_token, "init") == 0)
+        // else indikuje chybu, ze doslo k preteceni vstupniho bufferu, nahodi ext ref signal input
+        if (cnt4 < CMD_BUFFER_LEN) 
+            command_data_4[cnt4++] = c; 
+        else 
+            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
+        // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
+        if (c == '\n' || c == '\r')
         {
-            plo_new_data = PLO_INIT;
+            proccesing_command_4 = true;
+            cnt4 = 0;
+            plo_new_data = PLO_NEW_DATA;
+            return;
         }
-
-        if (strcasecmp(sub_token, "set_register") == 0)
-        {
-            global_new_register_value = hex2int(value);
-            plo_new_data = PLO_CHANGED_REGISTER;
-        }
-
+    }
+    else
+    // kdyz je i ten plny, nahod chybu nastavenim externi signal reference
+    {
+        HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
     }
 }
+
 
 int _write(int file, char const *buf, int n)
 {

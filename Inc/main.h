@@ -32,17 +32,25 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+#define CMD_BUFFER_LEN 30
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-unsigned int global_new_register_value;
+bool proccesing_command_1;
+bool proccesing_command_2;
+bool proccesing_command_3;
+bool proccesing_command_4;
+
+char command_data_1[CMD_BUFFER_LEN];
+char command_data_2[CMD_BUFFER_LEN];
+char command_data_3[CMD_BUFFER_LEN];
+char command_data_4[CMD_BUFFER_LEN];
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

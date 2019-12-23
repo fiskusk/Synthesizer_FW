@@ -36,6 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,7 +47,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,6 +64,103 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         HAL_GPIO_TogglePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin);
     }
 }
+
+uint32_t hex2int(char *hex) {
+    uint32_t val = 0;
+    while (*hex) {
+        // get current character then increment
+        uint8_t byte = *hex++; 
+        // transform hex character to the 4bit equivalent number, using the ascii table indexes
+        if (byte >= '0' && byte <= '9') byte = byte - '0';
+        else if (byte >= 'a' && byte <='f') byte = byte - 'a' + 10;
+        else if (byte >= 'A' && byte <='F') byte = byte - 'A' + 10;    
+        // shift 4 to make space for new digit, and add the 4 bits of the new digit 
+        val = (val << 4) | (byte & 0xF);
+    }
+    return val;
+}
+
+uint32_t usb_process_command(uint32_t *test_data, char *command_data)
+{
+    char *token;
+    char *sub_token;
+    char *value;
+
+    for (uint8_t i = 0; i < strlen(command_data); i++)
+    {
+        command_data[i] = (command_data[i] < 32 || command_data[i] > 126) ? '\0' : command_data[i];
+    }
+
+    token = strtok(command_data, " ");
+
+    if (strcasecmp(token, "ref") == 0)
+    {
+        value = strtok(NULL, " ");
+        if (strcasecmp(value, "ext") == 0) {
+            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
+        }
+
+        if (strcasecmp(value, "int") == 0) {
+            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_RESET);
+        }
+        plo_new_data=PLO_DATA_SENDED;
+    }
+
+    if (strcasecmp(token, "out") == 0)
+    {
+        sub_token = strtok(NULL, " ");
+        value = strtok(NULL, " ");
+        if (strcasecmp(sub_token, "1") == 0) {
+            if (strcasecmp(value, "on") == 0)
+                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_RESET);
+            else if (strcasecmp(value, "off") == 0)
+                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_SET);
+            plo_new_data=PLO_DATA_SENDED;
+        }
+
+        if (strcasecmp(sub_token, "2") == 0) {
+            if (strcasecmp(value, "on") == 0)
+                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
+            else if (strcasecmp(value, "off") == 0)
+                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET);
+            plo_new_data=PLO_DATA_SENDED;
+        }
+    }
+    
+    if (strcasecmp(token, "plo") == 0)
+    {
+        sub_token = strtok(NULL, " ");
+        value = strtok(NULL, " ");
+        if (strcasecmp(sub_token, "init") == 0)
+        {
+            plo_new_data = PLO_INIT;
+        }
+
+        if (strcasecmp(sub_token, "set_register") == 0)
+        {
+            uint32_t new_data = hex2int(value);
+            // save register into test_data variable
+            if ((new_data & 0x07) == 0x00)
+                test_data[0] = new_data;
+            else if ((new_data & 0x07) == 0x01)
+                test_data[1] = new_data;
+            else if ((new_data & 0x07) == 0x02)
+                test_data[2] = new_data;
+            else if ((new_data & 0x07) == 0x03)
+                test_data[3] = new_data;
+            else if ((new_data & 0x07) == 0x04)
+                test_data[4] = new_data;
+            else if ((new_data & 0x07) == 0x05)
+                test_data[5] = new_data;
+
+            plo_new_data = PLO_CHANGED_REGISTER;
+
+            return new_data;
+        }
+
+    }
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -73,8 +170,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-    //uint32_t test_data[6];
-    //test_data = { 0x00400005, 0x63BE80FC, 0x00001F23, 0x00005F42, 0x800103E9, 0x80C80000 };
+    /*
+    uint32_t test_data[6] = {
+        0x80C80000, 0x800103E9, 0x00005F42,
+        0x00001F23, 0x63BE80E4, 0x00400005
+    };
+    */
     
     uint32_t* test_data = (uint32_t*)malloc(sizeof(uint32_t)*6);
     test_data[0] = 0x80C80000;
@@ -93,7 +194,10 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+    proccesing_command_1 = false;
+    proccesing_command_2 = false;
+    proccesing_command_3 = false;
+    proccesing_command_4 = false;
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -118,25 +222,101 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
     // TODO odeslat informaci o zaveseni
-    if (plo_new_data == PLO_INIT)
+
+    if (proccesing_command_1 == true || proccesing_command_2 == true || proccesing_command_3 == true || proccesing_command_4 == true)
     {
-        // toggle pin for trigger logic analyzer
-        HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-        plo_write_all(test_data, PLO_INIT);
-        plo_write_all(test_data, PLO_INIT);
-        plo_write_all(test_data, PLO_OUT_ENABLE);
-        plo_new_data=PLO_DATA_SENDED;
+        if (proccesing_command_1 == true)
+        {
+            uint32_t new_register_value1 = usb_process_command(test_data, command_data_1);
+            if (plo_new_data == PLO_INIT)
+            {
+                // toggle pin for trigger logic analyzer
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_OUT_ENABLE);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            else if (plo_new_data == PLO_CHANGED_REGISTER)
+            {
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_register(new_register_value1);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            proccesing_command_1 = false;
+        }
+        if (proccesing_command_2 == true)
+        {
+            uint32_t new_register_value2 = usb_process_command(test_data, command_data_2);
+            if (plo_new_data == PLO_INIT)
+            {
+                // toggle pin for trigger logic analyzer
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_OUT_ENABLE);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            else if (plo_new_data == PLO_CHANGED_REGISTER)
+            {
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_register(new_register_value2);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            proccesing_command_2 = false;
+        }
+        if (proccesing_command_3 == true)
+        {
+            uint32_t new_register_value3 = usb_process_command(test_data, command_data_3);
+            if (plo_new_data == PLO_INIT)
+            {
+                // toggle pin for trigger logic analyzer
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_OUT_ENABLE);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            else if (plo_new_data == PLO_CHANGED_REGISTER)
+            {
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_register(new_register_value3);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            proccesing_command_3 = false;
+        }
+        if (proccesing_command_4 == true)
+        {
+            uint32_t new_register_value4 = usb_process_command(test_data, command_data_4);
+            if (plo_new_data == PLO_INIT)
+            {
+                // toggle pin for trigger logic analyzer
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_OUT_ENABLE);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            else if (plo_new_data == PLO_CHANGED_REGISTER)
+            {
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_register(new_register_value4);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            proccesing_command_4 = false;
+        }
     }
-    else if (plo_new_data == PLO_CHANGED_REGISTER)
-    {
-        HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-        plo_write_register(global_new_register_value);
-        plo_new_data=PLO_DATA_SENDED;
-    }
+    
+    
 
     /*
     HAL_GPIO_WritePin(MUX_OUT_GPIO_Port, MUX_OUT_Pin, GPIO_PIN_RESET);

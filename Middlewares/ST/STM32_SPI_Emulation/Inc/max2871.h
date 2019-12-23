@@ -14,6 +14,7 @@
 
 
 typedef enum{
+    PLO_NEW_DATA,
     PLO_INIT,
     PLO_OUT_ENABLE,
     PLO_CHANGED_REGISTER,

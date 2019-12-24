@@ -966,6 +966,7 @@ void FLASH_PageErase(uint32_t PageAddress)
     SET_BIT(FLASH->CR, FLASH_CR_PER);
     WRITE_REG(FLASH->AR, PageAddress);
     SET_BIT(FLASH->CR, FLASH_CR_STRT);
+    CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
 }
 
 /**

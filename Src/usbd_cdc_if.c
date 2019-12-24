@@ -66,9 +66,8 @@ uint8_t buffer[7];
 /* USER CODE BEGIN PRIVATE_DEFINES */
 /* Define size for the receive and transmit buffer over CDC */
 /* It's up to user to redefine and/or remove those define */
-#define APP_RX_DATA_SIZE    500
-#define APP_TX_DATA_SIZE    500
-#define CMD_BUFFER_LEN      30
+#define APP_RX_DATA_SIZE    250
+#define APP_TX_DATA_SIZE    100
 /* USER CODE END PRIVATE_DEFINES */
 
 /**

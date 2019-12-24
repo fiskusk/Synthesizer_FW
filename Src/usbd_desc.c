@@ -65,7 +65,7 @@
 
 #define USBD_VID     1155
 #define USBD_LANGID_STRING     1033
-#define USBD_MANUFACTURER_STRING     "STMicroelectronics"
+#define USBD_MANUFACTURER_STRING     "OK2FKU"
 #define USBD_PID_FS     22336
 #define USBD_PRODUCT_STRING_FS     "OK2FKU Synthesizer"
 #define USBD_CONFIGURATION_STRING_FS     "CDC Config"

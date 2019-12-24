@@ -22,6 +22,7 @@
         "gpio.h": "c",
         "stm32f0xx_hal.h": "c",
         "stm32f0xx_it.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "type_traits": "c"
     }
 }

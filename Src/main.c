@@ -29,6 +29,7 @@
 #include "max2871.h"
 #include "stm32f0xx_hal.h"
 #include "usbd_cdc_if.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +56,8 @@ __attribute__((__section__(".user_data"))) uint32_t saved_data_3[6];
 __attribute__((__section__(".user_data"))) uint32_t saved_data_4[6];
 uint32_t test_data[6] = {0x80C80000, 0x800103E9, 0x00005F42, 0x00001F23, 0x63BE80E4, 0x00400005};
 
+tick_handle_t tick_handle = TICK_NOT_OCCUR;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,7 +73,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (htim -> Instance == TIM3)
     {
         HAL_GPIO_TogglePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin);
-        
+        tick_handle = TICK_OCCUR;
     }
 }
 
@@ -137,6 +140,47 @@ void write_complete_data_to_flash(uint8_t possition, char *val0, char *val1, cha
     write_data_to_flash(possition, 3, hex2int(val3));
     write_data_to_flash(possition, 4, hex2int(val4));
     write_data_to_flash(possition, 5, hex2int(val5));
+}
+
+void check_lock_status(void)
+{
+    char *buffer;
+    if (HAL_GPIO_ReadPin(MUX_OUT_GPIO_Port, MUX_OUT_Pin) == 1)
+    {   
+        buffer = "plo locked\r";
+    }
+    else
+    {
+        buffer = "plo isn't locked\r";
+    }
+    CDC_Transmit_FS(buffer, strlen(buffer));
+}
+
+void send_stored_data(void)
+{
+    char stored_data_1[100], stored_data_2[65], stored_data_3[65], stored_data_4[65];
+    sprintf(stored_data_1, "stored_data_1 %08x %08x %08x %08x %08x %08x\r", 
+                          saved_data_1[0], saved_data_1[1], saved_data_1[2], 
+                          saved_data_1[3], saved_data_1[4], saved_data_1[5]);
+    sprintf(stored_data_2, "stored_data_2 %08x %08x %08x %08x %08x %08x\r", 
+                          saved_data_2[0], saved_data_2[1], saved_data_2[2], 
+                          saved_data_2[3], saved_data_2[4], saved_data_2[5]);
+    sprintf(stored_data_3, "stored_data_3 %08x %08x %08x %08x %08x %08x\r", 
+                          saved_data_3[0], saved_data_3[1], saved_data_3[2], 
+                          saved_data_3[3], saved_data_3[4], saved_data_3[5]);
+    sprintf(stored_data_4, "stored_data_4 %08x %08x %08x %08x %08x %08x\r",
+                          saved_data_4[0], saved_data_4[1], saved_data_4[2], 
+                          saved_data_4[3], saved_data_4[4], saved_data_4[5]);
+    CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));       
+    while((CDC_Transmit_FS(stored_data_1, strlen(stored_data_1)) == USBD_FAIL))
+    {
+        HAL_Delay(100);
+        CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));
+    }
+    //CDC_Transmit_FS(stored_data_2, strlen(stored_data_2));
+    //CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
+    //CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
+    
 }
 
 uint32_t usb_process_command(char *command_data)
@@ -253,28 +297,11 @@ uint32_t usb_process_command(char *command_data)
         }
         if (strcasecmp(sub_token, "locked?") == 0)
         {
-            char text[15];
-            char state[10];
-            strcpy(text, "plo ");
-            if (HAL_GPIO_ReadPin(MUX_OUT_GPIO_Port, MUX_OUT_Pin) == 1)
-            {
-                strcpy(state, "locked\n");
-                strcat(text, state);
-                while ( CDC_Transmit_FS(text, strlen(text)) == USBD_BUSY)
-                {
-                    HAL_Delay(1);
-                }
-            }
-            else
-            {
-                strcpy(state, "not locked\n");
-                strcat(text, state);
-                while ( CDC_Transmit_FS(text, strlen(text)) == USBD_BUSY)
-                {
-                    HAL_Delay(1);
-                }
-            }
-            
+            check_lock_status();
+        }
+        if (strcasecmp(sub_token, "storedData"))
+        {
+            send_stored_data();
         }
     }
     return 0;
@@ -336,16 +363,25 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+/*
+    && !((proccesing_command_1 == true) 
+        || (proccesing_command_2 == true) || (proccesing_command_3 == true)
+        || (proccesing_command_4 == true))*/
 
-    if (saved_data_1[0] == 0xABCDED01)
+    if ((tick_handle == TICK_OCCUR) )
     {
-        HAL_GPIO_TogglePin(INT_EXT_REF_GPIO_Port,INT_EXT_REF_Pin);
-        HAL_Delay(1000);
-    }
-    if (saved_data_1[1] == 0xABCDEF02)
-    {
-        HAL_GPIO_TogglePin(RF_OUT1_GPIO_Port,RF_OUT1_Pin);
-        HAL_Delay(1000);
+        static uint8_t cnt = 0;
+        if (cnt > 1)
+        {
+            //check_lock_status();
+            tick_handle = TICK_NOT_OCCUR;
+            cnt = 0;
+        }
+        else
+        {
+            cnt++;
+            tick_handle = TICK_NOT_OCCUR;
+        }
     }
 
     if (proccesing_command_1 == true || proccesing_command_2 == true || proccesing_command_3 == true || proccesing_command_4 == true)

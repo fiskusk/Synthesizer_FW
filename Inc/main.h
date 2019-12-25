@@ -51,6 +51,12 @@ char command_data_1[CMD_BUFFER_LEN];
 char command_data_2[CMD_BUFFER_LEN];
 char command_data_3[CMD_BUFFER_LEN];
 char command_data_4[CMD_BUFFER_LEN];
+
+typedef enum{
+    TICK_OCCUR, 
+    TICK_NOT_OCCUR
+}tick_handle_t;
+
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

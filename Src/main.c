@@ -56,6 +56,8 @@ __attribute__((__section__(".user_data"))) uint32_t saved_data_3[6];
 __attribute__((__section__(".user_data"))) uint32_t saved_data_4[6];
 uint32_t test_data[6] = {0x80C80000, 0x800103E9, 0x00005F42, 0x00001F23, 0x63BE80E4, 0x00400005};
 
+uint16_t counter = 0;
+
 tick_handle_t tick_handle = TICK_NOT_OCCUR;
 
 /* USER CODE END PV */
@@ -158,26 +160,35 @@ void check_lock_status(void)
 
 void send_stored_data(void)
 {
-    char stored_data_1[100], stored_data_2[65], stored_data_3[65], stored_data_4[65];
-    sprintf(stored_data_1, "stored_data_1 %08x %08x %08x %08x %08x %08x\r", 
+
+    char stored_data_1[100], stored_data_2[100], stored_data_3[100], stored_data_4[100];
+    USBD_HandleTypeDef hUsbDeviceFS;
+    sprintf(stored_data_1, "stored_data_1 %08x %08x %08x %08x %08x %08x\r\n", 
                           saved_data_1[0], saved_data_1[1], saved_data_1[2], 
                           saved_data_1[3], saved_data_1[4], saved_data_1[5]);
-    sprintf(stored_data_2, "stored_data_2 %08x %08x %08x %08x %08x %08x\r", 
+    sprintf(stored_data_2, "stored_data_2 %08x %08x %08x %08x %08x %08x\r\n", 
                           saved_data_2[0], saved_data_2[1], saved_data_2[2], 
                           saved_data_2[3], saved_data_2[4], saved_data_2[5]);
-    sprintf(stored_data_3, "stored_data_3 %08x %08x %08x %08x %08x %08x\r", 
+    sprintf(stored_data_3, "stored_data_3 %08x %08x %08x %08x %08x %08x\r\n", 
                           saved_data_3[0], saved_data_3[1], saved_data_3[2], 
                           saved_data_3[3], saved_data_3[4], saved_data_3[5]);
-    sprintf(stored_data_4, "stored_data_4 %08x %08x %08x %08x %08x %08x\r",
+    sprintf(stored_data_4, "stored_data_4 %08x %08x %08x %08x %08x %08x\r\n",
                           saved_data_4[0], saved_data_4[1], saved_data_4[2], 
                           saved_data_4[3], saved_data_4[4], saved_data_4[5]);
-    CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));       
-    while((CDC_Transmit_FS(stored_data_1, strlen(stored_data_1)) == USBD_FAIL))
+    CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));
+    /*USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+    while (hcdc->TxState != 0){
+        USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+        counter++;
+    }*/
+    CDC_Transmit_FS(stored_data_2, strlen(stored_data_2));
+    CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
+    CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
+    /*while((CDC_Transmit_FS(stored_data_1, strlen(stored_data_1)) == USBD_FAIL))
     {
         HAL_Delay(100);
         CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));
-    }
-    //CDC_Transmit_FS(stored_data_2, strlen(stored_data_2));
+    }*/
     //CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
     //CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
     

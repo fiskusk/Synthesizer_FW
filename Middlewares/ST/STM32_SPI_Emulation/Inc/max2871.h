@@ -23,8 +23,6 @@ typedef enum{
 
 extern volatile plo_new_data_t plo_new_data;
 
-
-
 //extern void dds_init(void);
 extern void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type);
 extern void plo_write_register(uint32_t register_data);

@@ -209,13 +209,13 @@ uint32_t usb_process_command(char *command_data)
             HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
         }
 
-        if (strcasecmp(value, "int") == 0) {
+        else if (strcasecmp(value, "int") == 0) {
             HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_RESET);
         }
         plo_new_data=PLO_DATA_SENDED;
     }
 
-    if (strcasecmp(token, "out") == 0)
+    else if (strcasecmp(token, "out") == 0)
     {
         sub_token = strtok(NULL, " ");
         value = strtok(NULL, " ");
@@ -224,19 +224,17 @@ uint32_t usb_process_command(char *command_data)
                 HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_RESET);
             else if (strcasecmp(value, "off") == 0)
                 HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_SET);
-            plo_new_data=PLO_DATA_SENDED;
         }
-
-        if (strcasecmp(sub_token, "2") == 0) {
+        else if (strcasecmp(sub_token, "2") == 0) {
             if (strcasecmp(value, "on") == 0)
                 HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
             else if (strcasecmp(value, "off") == 0)
                 HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET);
-            plo_new_data=PLO_DATA_SENDED;
         }
+        plo_new_data=PLO_DATA_SENDED;
     }
     
-    if (strcasecmp(token, "plo") == 0)
+    else if (strcasecmp(token, "plo") == 0)
     {
         sub_token = strtok(NULL, " ");
         value = strtok(NULL, " ");
@@ -251,7 +249,7 @@ uint32_t usb_process_command(char *command_data)
             plo_new_data = PLO_INIT;
         }
 
-        if (strcasecmp(sub_token, "set_register") == 0)
+        else if (strcasecmp(sub_token, "set_register") == 0)
         {
             uint32_t new_data = hex2int(value);
             // save register into test_data variable
@@ -273,7 +271,7 @@ uint32_t usb_process_command(char *command_data)
             return new_data;
         }
 
-        if (strcasecmp(sub_token, "data") == 0)
+        else if (strcasecmp(sub_token, "data") == 0)
         {
             if (strcasecmp(value, "clean") == 0)
                 myFLASH_PageErase(0x08007000);
@@ -295,13 +293,15 @@ uint32_t usb_process_command(char *command_data)
             }
             plo_new_data=PLO_DATA_SENDED;
         }
-        if (strcasecmp(sub_token, "locked?") == 0)
+        else if (strcasecmp(sub_token, "locked?") == 0)
         {
             check_lock_status();
+            plo_new_data=PLO_DATA_SENDED;
         }
-        if (strcasecmp(sub_token, "storedData"))
+        else if (strcasecmp(sub_token, "storedData"))
         {
             send_stored_data();
+            plo_new_data=PLO_DATA_SENDED;
         }
     }
     return 0;
@@ -373,7 +373,7 @@ int main(void)
         static uint8_t cnt = 0;
         if (cnt > 1)
         {
-            //check_lock_status();
+            check_lock_status();
             tick_handle = TICK_NOT_OCCUR;
             cnt = 0;
         }

@@ -41,6 +41,7 @@ Src/gpio.c \
 Src/sys.c \
 Src/stm32f0xx_it.c \
 Src/stm32f0xx_hal_msp.c \
+Src/max2871.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_ll_usb.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c \
@@ -68,7 +69,6 @@ Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c \
 Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c \
-Middlewares/ST/STM32_SPI_Emulation/Src/max2871.c \
 Src/tim.c
 
 # ASM sources
@@ -132,8 +132,7 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Device/ST/STM32F0xx/Include \
 -IDrivers/CMSIS/Include \
 -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc \
--IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
--IMiddlewares/ST/STM32_SPI_Emulation/Inc
+-IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
 
 
 # compile gcc flags

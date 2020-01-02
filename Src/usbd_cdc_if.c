@@ -279,7 +279,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   /* USER CODE BEGIN 6 */
     USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
     USBD_CDC_ReceivePacket(&hUsbDeviceFS);
-    //usb_data_avaible(Buf[0]);    
+    
     for (uint8_t i = 0; i < *Len; i++)
     {
         usb_data_avaible(Buf[i]);
@@ -314,7 +314,11 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
   return result;
 }
 
+/****************************************************/
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
+/****************************************************/
+/****************************************************/
+/****************************************************/
 static void usb_data_avaible(uint8_t c)
 {
     static uint16_t cnt1;
@@ -395,7 +399,6 @@ static void usb_data_avaible(uint8_t c)
         HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
     }
 }
-
 
 int _write(int file, char const *buf, int n)
 {

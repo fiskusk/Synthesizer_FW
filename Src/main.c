@@ -147,13 +147,22 @@ void write_complete_data_to_flash(uint8_t possition, char *val0, char *val1, cha
 void check_lock_status(void)
 {
     char *buffer;
-    if (HAL_GPIO_ReadPin(MUX_OUT_GPIO_Port, MUX_OUT_Pin) == 1)
-    {   
-        buffer = "plo locked\r";
+    uint32_t test = test_data[2] & 0b00011100000000000000000000000000;
+    test = test >> 26;
+    if (((test_data[2] & 0b00011100000000000000000000000000) >> 26) == 0b110)
+    {
+        if (HAL_GPIO_ReadPin(MUX_OUT_GPIO_Port, MUX_OUT_Pin) == 1)
+        {   
+            buffer = "plo locked\r";
+        }
+        else
+        {
+            buffer = "plo isn't locked\r";
+        }
     }
     else
     {
-        buffer = "plo isn't locked\r";
+        buffer = "plo state is not known\r";
     }
     CDC_Transmit_FS(buffer, strlen(buffer));
 }
@@ -175,22 +184,22 @@ void send_stored_data(void)
     sprintf(stored_data_4, "stored_data_4 %08x %08x %08x %08x %08x %08x\r\n",
                           saved_data_4[0], saved_data_4[1], saved_data_4[2], 
                           saved_data_4[3], saved_data_4[4], saved_data_4[5]);
-    CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));
-    /*USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
-    while (hcdc->TxState != 0){
-        USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+    CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));    
+    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){
         counter++;
-    }*/
+    }
     CDC_Transmit_FS(stored_data_2, strlen(stored_data_2));
+    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){
+        counter++;
+    }
     CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
+    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){
+        counter++;
+    }
     CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
-    /*while((CDC_Transmit_FS(stored_data_1, strlen(stored_data_1)) == USBD_FAIL))
-    {
-        HAL_Delay(100);
-        CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));
-    }*/
-    //CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
-    //CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
+    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){
+        counter++;
+    }
     
 }
 

@@ -27,8 +27,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "max2871.h"
+#include "flash.h"
+#include "timer.h"
 #include "stm32f0xx_hal.h"
-#include "usbd_cdc_if.h"
 #include "stdio.h"
 /* USER CODE END Includes */
 
@@ -50,15 +51,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-__attribute__((__section__(".user_data"))) uint32_t saved_data_1[6];
-__attribute__((__section__(".user_data"))) uint32_t saved_data_2[6];
-__attribute__((__section__(".user_data"))) uint32_t saved_data_3[6];
-__attribute__((__section__(".user_data"))) uint32_t saved_data_4[6];
-uint32_t test_data[6] = {0x80C80000, 0x800103E9, 0x00005F42, 0x00001F23, 0x63BE80E4, 0x00400005};
 
-uint16_t counter = 0;
-
-tick_handle_t tick_handle = TICK_NOT_OCCUR;
 
 /* USER CODE END PV */
 
@@ -70,262 +63,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim -> Instance == TIM3)
-    {
-        HAL_GPIO_TogglePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin);
-        tick_handle = TICK_OCCUR;
-    }
-}
-
-void myFLASH_PageErase(uint32_t address)
-{
-    HAL_FLASH_Unlock();
-    FLASH->CR |= FLASH_CR_PER; /* (1) */
-    FLASH->AR = address; /* (2) */
-    FLASH->CR |= FLASH_CR_STRT; /* (3) */
-    while ((FLASH->SR & FLASH_SR_BSY) != 0) /* (4) */
-    if ((FLASH->SR & FLASH_SR_EOP) != 0) /* (5) */
-    {
-        FLASH->SR |= FLASH_SR_EOP; /* (6)*/
-    }
-    FLASH->CR &= ~FLASH_CR_PER; /* (7) */
-    HAL_FLASH_Lock();
-}
-
-void write_data_to_flash(uint8_t position, uint32_t index, uint32_t data)
-{
-    HAL_FLASH_Unlock();
-
-    switch (position)
-    {
-        case 0:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, &test_data[index], data);
-            break;
-        case 1:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, &saved_data_1[index], data);
-            break;
-        case 2:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, &saved_data_2[index], data);
-            break;
-        case 3:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, &saved_data_3[index], data);
-            break;
-        case 4:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, &saved_data_4[index], data);
-            break;
-    }
-    HAL_FLASH_Lock();
-}
-
-uint32_t hex2int(char *hex) {
-    uint32_t val = 0;
-    while (*hex) {
-        // get current character then increment
-        uint8_t byte = *hex++; 
-        // transform hex character to the 4bit equivalent number, using the ascii table indexes
-        if (byte >= '0' && byte <= '9') byte = byte - '0';
-        else if (byte >= 'a' && byte <='f') byte = byte - 'a' + 10;
-        else if (byte >= 'A' && byte <='F') byte = byte - 'A' + 10;    
-        // shift 4 to make space for new digit, and add the 4 bits of the new digit 
-        val = (val << 4) | (byte & 0xF);
-    }
-    return val;
-}
-
-void write_complete_data_to_flash(uint8_t possition, char *val0, char *val1, char *val2, char *val3, char *val4, char *val5)
-{
-    write_data_to_flash(possition, 0, hex2int(val0));
-    write_data_to_flash(possition, 1, hex2int(val1));
-    write_data_to_flash(possition, 2, hex2int(val2));
-    write_data_to_flash(possition, 3, hex2int(val3));
-    write_data_to_flash(possition, 4, hex2int(val4));
-    write_data_to_flash(possition, 5, hex2int(val5));
-}
-
-void check_lock_status(void)
-{
-    char *buffer;
-    uint32_t test = test_data[2] & 0b00011100000000000000000000000000;
-    test = test >> 26;
-    if (((test_data[2] & 0b00011100000000000000000000000000) >> 26) == 0b110)
-    {
-        if (HAL_GPIO_ReadPin(MUX_OUT_GPIO_Port, MUX_OUT_Pin) == 1)
-        {   
-            buffer = "plo locked\r";
-        }
-        else
-        {
-            buffer = "plo isn't locked\r";
-        }
-    }
-    else
-    {
-        buffer = "plo state is not known\r";
-    }
-    CDC_Transmit_FS(buffer, strlen(buffer));
-}
-
-void send_stored_data(void)
-{
-
-    char stored_data_1[100], stored_data_2[100], stored_data_3[100], stored_data_4[100];
-    USBD_HandleTypeDef hUsbDeviceFS;
-    sprintf(stored_data_1, "stored_data_1 %08x %08x %08x %08x %08x %08x\r\n", 
-                          saved_data_1[0], saved_data_1[1], saved_data_1[2], 
-                          saved_data_1[3], saved_data_1[4], saved_data_1[5]);
-    sprintf(stored_data_2, "stored_data_2 %08x %08x %08x %08x %08x %08x\r\n", 
-                          saved_data_2[0], saved_data_2[1], saved_data_2[2], 
-                          saved_data_2[3], saved_data_2[4], saved_data_2[5]);
-    sprintf(stored_data_3, "stored_data_3 %08x %08x %08x %08x %08x %08x\r\n", 
-                          saved_data_3[0], saved_data_3[1], saved_data_3[2], 
-                          saved_data_3[3], saved_data_3[4], saved_data_3[5]);
-    sprintf(stored_data_4, "stored_data_4 %08x %08x %08x %08x %08x %08x\r\n",
-                          saved_data_4[0], saved_data_4[1], saved_data_4[2], 
-                          saved_data_4[3], saved_data_4[4], saved_data_4[5]);
-    CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));    
-    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){
-        counter++;
-    }
-    CDC_Transmit_FS(stored_data_2, strlen(stored_data_2));
-    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){
-        counter++;
-    }
-    CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
-    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){
-        counter++;
-    }
-    CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
-    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){
-        counter++;
-    }
-    
-}
-
-uint32_t usb_process_command(char *command_data)
-{
-    char *token;
-    char *sub_token;
-    char *value;
-    char *value0;
-    char *value1;
-    char *value2;
-    char *value3;
-    char *value4;
-    char *value5;
-
-    for (uint8_t i = 0; i < strlen(command_data); i++)
-    {
-        command_data[i] = (command_data[i] < 32 || command_data[i] > 126) ? '\0' : command_data[i];
-    }
-
-    token = strtok(command_data, " ");
-
-    if (strcasecmp(token, "ref") == 0)
-    {
-        value = strtok(NULL, " ");
-        if (strcasecmp(value, "ext") == 0) {
-            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
-        }
-
-        else if (strcasecmp(value, "int") == 0) {
-            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_RESET);
-        }
-        plo_new_data=PLO_DATA_SENDED;
-    }
-
-    else if (strcasecmp(token, "out") == 0)
-    {
-        sub_token = strtok(NULL, " ");
-        value = strtok(NULL, " ");
-        if (strcasecmp(sub_token, "1") == 0) {
-            if (strcasecmp(value, "on") == 0)
-                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_RESET);
-            else if (strcasecmp(value, "off") == 0)
-                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_SET);
-        }
-        else if (strcasecmp(sub_token, "2") == 0) {
-            if (strcasecmp(value, "on") == 0)
-                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
-            else if (strcasecmp(value, "off") == 0)
-                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET);
-        }
-        plo_new_data=PLO_DATA_SENDED;
-    }
-    
-    else if (strcasecmp(token, "plo") == 0)
-    {
-        sub_token = strtok(NULL, " ");
-        value = strtok(NULL, " ");
-        value0 =strtok(NULL, " ");
-        value1 = strtok(NULL, " ");
-        value2 = strtok(NULL, " ");
-        value3 = strtok(NULL, " ");
-        value4 = strtok(NULL, " ");
-        value5 = strtok(NULL, " ");
-        if (strcasecmp(sub_token, "init") == 0)
-        {
-            plo_new_data = PLO_INIT;
-        }
-
-        else if (strcasecmp(sub_token, "set_register") == 0)
-        {
-            uint32_t new_data = hex2int(value);
-            // save register into test_data variable
-            if ((new_data & 0x07) == 0x00)
-                test_data[0] = new_data;
-            else if ((new_data & 0x07) == 0x01)
-                test_data[1] = new_data;
-            else if ((new_data & 0x07) == 0x02)
-                test_data[2] = new_data;
-            else if ((new_data & 0x07) == 0x03)
-                test_data[3] = new_data;
-            else if ((new_data & 0x07) == 0x04)
-                test_data[4] = new_data;
-            else if ((new_data & 0x07) == 0x05)
-                test_data[5] = new_data;
-
-            plo_new_data = PLO_CHANGED_REGISTER;
-
-            return new_data;
-        }
-
-        else if (strcasecmp(sub_token, "data") == 0)
-        {
-            if (strcasecmp(value, "clean") == 0)
-                myFLASH_PageErase(0x08007000);
-            else if (strcasecmp(value, "1") == 0)
-            {
-                write_complete_data_to_flash(1, value0, value1, value2, value3, value4, value5);
-            }
-            else if (strcasecmp(value, "2") == 0)
-            {
-                write_complete_data_to_flash(2, value0, value1, value2, value3, value4, value5);
-            }
-            else if (strcasecmp(value, "3") == 0)
-            {
-                write_complete_data_to_flash(3, value0, value1, value2, value3, value4, value5);
-            }
-            else if (strcasecmp(value, "4") == 0)
-            {
-                write_complete_data_to_flash(4, value0, value1, value2, value3, value4, value5);
-            }
-            plo_new_data=PLO_DATA_SENDED;
-        }
-        else if (strcasecmp(sub_token, "locked?") == 0)
-        {
-            check_lock_status();
-            plo_new_data=PLO_DATA_SENDED;
-        }
-        else if (strcasecmp(sub_token, "storedData"))
-        {
-            send_stored_data();
-            plo_new_data=PLO_DATA_SENDED;
-        }
-    }
-    return 0;
-}
 
 /* USER CODE END 0 */
 
@@ -336,15 +73,6 @@ uint32_t usb_process_command(char *command_data)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-    /*
-    uint32_t test_data[6] = {
-        0x80C80000, 0x800103E9, 0x00005F42,
-        0x00001F23, 0x63BE80E4, 0x00400005
-    };
-    */
-
-    //saved_data_1[0] = * ((uint32_t *)ADDRESS);
-    //saved_data_1[1] = * ((uint32_t *)ADDRESS);
     
   /* USER CODE END 1 */
   
@@ -355,10 +83,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-    proccesing_command_1 = false;
-    proccesing_command_2 = false;
-    proccesing_command_3 = false;
-    proccesing_command_4 = false;
+    
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -383,10 +108,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-/*
-    && !((proccesing_command_1 == true) 
-        || (proccesing_command_2 == true) || (proccesing_command_3 == true)
-        || (proccesing_command_4 == true))*/
 
     if ((tick_handle == TICK_OCCUR) )
     {
@@ -403,99 +124,8 @@ int main(void)
             tick_handle = TICK_NOT_OCCUR;
         }
     }
-
-    if (proccesing_command_1 == true || proccesing_command_2 == true || proccesing_command_3 == true || proccesing_command_4 == true)
-    {
-        if (proccesing_command_1 == true)
-        {
-            uint32_t new_register_value1 = usb_process_command(command_data_1);
-            if (plo_new_data == PLO_INIT)
-            {
-                // toggle pin for trigger logic analyzer
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_OUT_ENABLE);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            else if (plo_new_data == PLO_CHANGED_REGISTER)
-            {
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_register(new_register_value1);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            proccesing_command_1 = false;
-        }
-        if (proccesing_command_2 == true)
-        {
-            uint32_t new_register_value2 = usb_process_command(command_data_2);
-            if (plo_new_data == PLO_INIT)
-            {
-                // toggle pin for trigger logic analyzer
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_OUT_ENABLE);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            else if (plo_new_data == PLO_CHANGED_REGISTER)
-            {
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_register(new_register_value2);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            proccesing_command_2 = false;
-        }
-        if (proccesing_command_3 == true)
-        {
-            uint32_t new_register_value3 = usb_process_command(command_data_3);
-            if (plo_new_data == PLO_INIT)
-            {
-                // toggle pin for trigger logic analyzer
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_OUT_ENABLE);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            else if (plo_new_data == PLO_CHANGED_REGISTER)
-            {
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_register(new_register_value3);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            proccesing_command_3 = false;
-        }
-        if (proccesing_command_4 == true)
-        {
-            uint32_t new_register_value4 = usb_process_command(command_data_4);
-            if (plo_new_data == PLO_INIT)
-            {
-                // toggle pin for trigger logic analyzer
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_OUT_ENABLE);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            else if (plo_new_data == PLO_CHANGED_REGISTER)
-            {
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_register(new_register_value4);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            proccesing_command_4 = false;
-        }
-    }
     
+    proccesing_command_data();
     /*
     HAL_GPIO_WritePin(MUX_OUT_GPIO_Port, MUX_OUT_Pin, GPIO_PIN_RESET);
     HAL_Delay(250);

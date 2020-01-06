@@ -106,6 +106,9 @@ extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
+extern void check_lock_status(void);
+extern void proccesing_command_data();
+extern uint32_t hex2int(char *hex);
 
 /* USER CODE END EXPORTED_FUNCTIONS */
 

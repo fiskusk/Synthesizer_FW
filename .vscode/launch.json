@@ -15,6 +15,20 @@
               "interface/stlink-v2.cfg",
               "target/stm32f0x.cfg"
           ]
+      },
+      {
+          "type": "cortex-debug",
+          "request": "attach",
+          "servertype": "openocd",
+          "cwd": "${workspaceRoot}",
+          "executable": "C:/Users/Uzivatel/Documents/_diplomka/Synthesizer_FW/build/Synthesizer_FW_control.elf",
+          "name": "Attach (OpenOCD)",
+          "device": "STM32F042F6",
+          "svdFile" : "C:/Users/Uzivatel/Documents/_diplomka/Synthesizer_FW/STM32F0xx.svd",
+          "configFiles": [
+              "interface/stlink-v2.cfg",
+              "target/stm32f0x.cfg"
+          ]
       }
   ]
 }

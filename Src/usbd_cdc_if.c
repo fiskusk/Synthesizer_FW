@@ -24,6 +24,8 @@
 
 /* USER CODE BEGIN INCLUDE */
 #include "max2871.h"
+#include "flash.h"
+#include "main.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +35,7 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 uint8_t buffer[7];
+uint32_t test_data[6] = {0x80C80000, 0x800103E9, 0x00005F42, 0x00001F23, 0x63BE80E4, 0x00400005};
 
 /* USER CODE END PV */
 
@@ -100,6 +103,15 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
+bool proccesing_command_1 = false;
+bool proccesing_command_2 = false;
+bool proccesing_command_3 = false;
+bool proccesing_command_4 = false;
+
+char command_data_1[CMD_BUFFER_LEN];
+char command_data_2[CMD_BUFFER_LEN];
+char command_data_3[CMD_BUFFER_LEN];
+char command_data_4[CMD_BUFFER_LEN];
 
 /* USER CODE END PRIVATE_VARIABLES */
 
@@ -134,7 +146,7 @@ static int8_t CDC_Receive_FS(uint8_t* pbuf, uint32_t *Len);
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
 static void usb_data_avaible(uint8_t c);
-void usb_process_command(char *data, uint8_t len);
+uint32_t usb_process_command(char *command_data);
 /* USER CODE END PRIVATE_FUNCTIONS_DECLARATION */
 
 /**
@@ -303,6 +315,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
+  uint64_t counter = 0;
   /* USER CODE BEGIN 7 */
   USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
   if (hcdc->TxState != 0){
@@ -310,6 +323,9 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
   }
   USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
   result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
+  while (hcdc->TxState != 0){
+    counter++;
+  }
   /* USER CODE END 7 */
   return result;
 }
@@ -405,6 +421,283 @@ int _write(int file, char const *buf, int n)
     /* stdout redirection to USB */
     CDC_Transmit_FS((char*)(buf), n);
     return n;
+}
+
+uint32_t usb_process_command(char *command_data)
+{
+    char *token;
+    char *sub_token;
+    char *value;
+    char *value0;
+    char *value1;
+    char *value2;
+    char *value3;
+    char *value4;
+    char *value5;
+
+    for (uint8_t i = 0; i < strlen(command_data); i++)
+    {
+        command_data[i] = (command_data[i] < 32 || command_data[i] > 126) ? '\0' : command_data[i];
+    }
+
+    token = strtok(command_data, " ");
+
+    if (strcasecmp(token, "ref") == 0)
+    {
+        value = strtok(NULL, " ");
+        if (strcasecmp(value, "ext") == 0) {
+            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
+        }
+
+        else if (strcasecmp(value, "int") == 0) {
+            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_RESET);
+        }
+        plo_new_data=PLO_DATA_SENDED;
+    }
+
+    else if (strcasecmp(token, "out") == 0)
+    {
+        sub_token = strtok(NULL, " ");
+        value = strtok(NULL, " ");
+        if (strcasecmp(sub_token, "1") == 0) {
+            if (strcasecmp(value, "on") == 0)
+                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_RESET);
+            else if (strcasecmp(value, "off") == 0)
+                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_SET);
+        }
+        else if (strcasecmp(sub_token, "2") == 0) {
+            if (strcasecmp(value, "on") == 0)
+                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
+            else if (strcasecmp(value, "off") == 0)
+                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET);
+        }
+        plo_new_data=PLO_DATA_SENDED;
+    }
+    
+    else if (strcasecmp(token, "plo") == 0)
+    {
+        sub_token = strtok(NULL, " ");
+        value = strtok(NULL, " ");
+        value0 =strtok(NULL, " ");
+        value1 = strtok(NULL, " ");
+        value2 = strtok(NULL, " ");
+        value3 = strtok(NULL, " ");
+        value4 = strtok(NULL, " ");
+        value5 = strtok(NULL, " ");
+        if (strcasecmp(sub_token, "init") == 0)
+        {
+            plo_new_data = PLO_INIT;
+        }
+
+        else if (strcasecmp(sub_token, "set_register") == 0)
+        {
+            uint32_t new_data = hex2int(value);
+            // save register into test_data variable
+            if ((new_data & 0x07) == 0x00)
+                test_data[0] = new_data;
+            else if ((new_data & 0x07) == 0x01)
+                test_data[1] = new_data;
+            else if ((new_data & 0x07) == 0x02)
+                test_data[2] = new_data;
+            else if ((new_data & 0x07) == 0x03)
+                test_data[3] = new_data;
+            else if ((new_data & 0x07) == 0x04)
+                test_data[4] = new_data;
+            else if ((new_data & 0x07) == 0x05)
+                test_data[5] = new_data;
+
+            plo_new_data = PLO_CHANGED_REGISTER;
+
+            return new_data;
+        }
+
+        else if (strcasecmp(sub_token, "data") == 0)
+        {
+            if (strcasecmp(value, "clean") == 0)
+                myFLASH_PageErase(0x08007000);
+            else if (strcasecmp(value, "1") == 0)
+            {
+                write_complete_data_to_flash(1, value0, value1, value2, value3, value4, value5);
+            }
+            else if (strcasecmp(value, "2") == 0)
+            {
+                write_complete_data_to_flash(2, value0, value1, value2, value3, value4, value5);
+            }
+            else if (strcasecmp(value, "3") == 0)
+            {
+                write_complete_data_to_flash(3, value0, value1, value2, value3, value4, value5);
+            }
+            else if (strcasecmp(value, "4") == 0)
+            {
+                write_complete_data_to_flash(4, value0, value1, value2, value3, value4, value5);
+            }
+            plo_new_data=PLO_DATA_SENDED;
+        }
+        else if (strcasecmp(sub_token, "locked?") == 0)
+        {
+            check_lock_status();
+            plo_new_data=PLO_DATA_SENDED;
+        }
+        else if (strcasecmp(sub_token, "storedData") == 0)
+        {
+            flash_send_stored_data();
+            plo_new_data=PLO_DATA_SENDED;
+        }
+    }
+    return 0;
+}
+
+void proccesing_command_data()
+{
+    if (proccesing_command_1 == true || proccesing_command_2 == true || proccesing_command_3 == true || proccesing_command_4 == true)
+    {
+        if (proccesing_command_1 == true)
+        {
+            uint32_t new_register_value1 = usb_process_command(command_data_1);
+            if (plo_new_data == PLO_INIT)
+            {
+                // toggle pin for trigger logic analyzer
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_OUT_ENABLE);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            else if (plo_new_data == PLO_CHANGED_REGISTER)
+            {
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_register(new_register_value1);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            proccesing_command_1 = false;
+        }
+        if (proccesing_command_2 == true)
+        {
+            uint32_t new_register_value2 = usb_process_command(command_data_2);
+            if (plo_new_data == PLO_INIT)
+            {
+                // toggle pin for trigger logic analyzer
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_OUT_ENABLE);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            else if (plo_new_data == PLO_CHANGED_REGISTER)
+            {
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_register(new_register_value2);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            proccesing_command_2 = false;
+        }
+        if (proccesing_command_3 == true)
+        {
+            uint32_t new_register_value3 = usb_process_command(command_data_3);
+            if (plo_new_data == PLO_INIT)
+            {
+                // toggle pin for trigger logic analyzer
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_OUT_ENABLE);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            else if (plo_new_data == PLO_CHANGED_REGISTER)
+            {
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_register(new_register_value3);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            proccesing_command_3 = false;
+        }
+        if (proccesing_command_4 == true)
+        {
+            uint32_t new_register_value4 = usb_process_command(command_data_4);
+            if (plo_new_data == PLO_INIT)
+            {
+                // toggle pin for trigger logic analyzer
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_INIT);
+                plo_write_all(test_data, PLO_OUT_ENABLE);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            else if (plo_new_data == PLO_CHANGED_REGISTER)
+            {
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+                plo_write_register(new_register_value4);
+                plo_new_data=PLO_DATA_SENDED;
+            }
+            proccesing_command_4 = false;
+        }
+    }
+}
+
+void flash_send_stored_data(void)
+{
+    static uint16_t counter = 0;
+    char stored_data_1[100], stored_data_2[100], stored_data_3[100], stored_data_4[100];
+    USBD_HandleTypeDef hUsbDeviceFS;
+    sprintf(stored_data_1, "stored_data_1 %08x %08x %08x %08x %08x %08x\r", 
+                          saved_data_1[0], saved_data_1[1], saved_data_1[2], 
+                          saved_data_1[3], saved_data_1[4], saved_data_1[5]);
+    sprintf(stored_data_2, "stored_data_2 %08x %08x %08x %08x %08x %08x\r", 
+                          saved_data_2[0], saved_data_2[1], saved_data_2[2], 
+                          saved_data_2[3], saved_data_2[4], saved_data_2[5]);
+    sprintf(stored_data_3, "stored_data_3 %08x %08x %08x %08x %08x %08x\r", 
+                          saved_data_3[0], saved_data_3[1], saved_data_3[2], 
+                          saved_data_3[3], saved_data_3[4], saved_data_3[5]);
+    sprintf(stored_data_4, "stored_data_4 %08x %08x %08x %08x %08x %08x\r",
+                          saved_data_4[0], saved_data_4[1], saved_data_4[2], 
+                          saved_data_4[3], saved_data_4[4], saved_data_4[5]);
+    CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));
+    CDC_Transmit_FS(stored_data_2, strlen(stored_data_2));
+    CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
+    CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
+    //while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){counter++;}
+    //CDC_Transmit_FS(stored_data_2, strlen(stored_data_2));
+    //while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){}
+    //CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
+    //while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){}
+    //CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
+   // while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){}
+}
+
+void check_lock_status(void)
+{
+    if ((proccesing_command_1 != true) || (proccesing_command_2 != true) || \
+        (proccesing_command_3 != true) || (proccesing_command_4 != true))
+    {
+        char *buffer;
+        uint32_t test = test_data[2] & 0b00011100000000000000000000000000;
+        test = test >> 26;
+        if (((test_data[2] & 0b00011100000000000000000000000000) >> 26) == 0b110)
+        {
+            if (HAL_GPIO_ReadPin(MUX_OUT_GPIO_Port, MUX_OUT_Pin) == 1)
+            {   
+                buffer = "plo locked\r";
+            }
+            else
+            {
+                buffer = "plo isn't locked\r";
+            }
+        }
+        else
+        {
+            buffer = "plo state is not known\r";
+        }
+        CDC_Transmit_FS(buffer, strlen(buffer));
+    }
+    
 }
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 

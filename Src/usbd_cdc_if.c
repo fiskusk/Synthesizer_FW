@@ -416,13 +416,6 @@ static void usb_data_avaible(uint8_t c)
     }
 }
 
-int _write(int file, char const *buf, int n)
-{
-    /* stdout redirection to USB */
-    CDC_Transmit_FS((char*)(buf), n);
-    return n;
-}
-
 uint32_t usb_process_command(char *command_data)
 {
     char *token;
@@ -514,7 +507,7 @@ uint32_t usb_process_command(char *command_data)
         else if (strcasecmp(sub_token, "data") == 0)
         {
             if (strcasecmp(value, "clean") == 0)
-                myFLASH_PageErase(0x08007000);
+                myFLASH_PageErase(0x08007800);
             else if (strcasecmp(value, "1") == 0)
             {
                 write_complete_data_to_flash(1, value0, value1, value2, value3, value4, value5);
@@ -644,32 +637,22 @@ void proccesing_command_data()
 
 void flash_send_stored_data(void)
 {
-    static uint16_t counter = 0;
-    char stored_data_1[100], stored_data_2[100], stored_data_3[100], stored_data_4[100];
-    USBD_HandleTypeDef hUsbDeviceFS;
-    sprintf(stored_data_1, "stored_data_1 %08x %08x %08x %08x %08x %08x\r", 
-                          saved_data_1[0], saved_data_1[1], saved_data_1[2], 
-                          saved_data_1[3], saved_data_1[4], saved_data_1[5]);
-    sprintf(stored_data_2, "stored_data_2 %08x %08x %08x %08x %08x %08x\r", 
-                          saved_data_2[0], saved_data_2[1], saved_data_2[2], 
-                          saved_data_2[3], saved_data_2[4], saved_data_2[5]);
-    sprintf(stored_data_3, "stored_data_3 %08x %08x %08x %08x %08x %08x\r", 
-                          saved_data_3[0], saved_data_3[1], saved_data_3[2], 
-                          saved_data_3[3], saved_data_3[4], saved_data_3[5]);
-    sprintf(stored_data_4, "stored_data_4 %08x %08x %08x %08x %08x %08x\r",
-                          saved_data_4[0], saved_data_4[1], saved_data_4[2], 
-                          saved_data_4[3], saved_data_4[4], saved_data_4[5]);
-    CDC_Transmit_FS(stored_data_1, strlen(stored_data_1));
-    CDC_Transmit_FS(stored_data_2, strlen(stored_data_2));
-    CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
-    CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
-    //while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){counter++;}
-    //CDC_Transmit_FS(stored_data_2, strlen(stored_data_2));
-    //while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){}
-    //CDC_Transmit_FS(stored_data_3, strlen(stored_data_3));
-    //while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){}
-    //CDC_Transmit_FS(stored_data_4, strlen(stored_data_4));
-   // while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){}
+    printf( "stored_data_1 %08x %08x %08x %08x %08x %08x\r", 
+        (unsigned int)(saved_data_1[0]), (unsigned int)(saved_data_1[1]),
+        (unsigned int)(saved_data_1[2]), (unsigned int)(saved_data_1[3]), 
+        (unsigned int)(saved_data_1[4]), (unsigned int)(saved_data_1[5]));
+    printf("stored_data_2 %08x %08x %08x %08x %08x %08x\r", 
+        (unsigned int)(saved_data_2[0]), (unsigned int)(saved_data_2[1]),
+        (unsigned int)(saved_data_2[2]), (unsigned int)(saved_data_2[3]),
+        (unsigned int)(saved_data_2[4]), (unsigned int)(saved_data_2[5]));
+    printf("stored_data_3 %08x %08x %08x %08x %08x %08x\r", 
+        (unsigned int)(saved_data_3[0]), (unsigned int)(saved_data_3[1]),
+        (unsigned int)(saved_data_3[2]), (unsigned int)(saved_data_3[3]),
+        (unsigned int)(saved_data_3[4]), (unsigned int)(saved_data_3[5]));
+    printf("stored_data_4 %08x %08x %08x %08x %08x %08x\r",
+        (unsigned int)(saved_data_4[0]), (unsigned int)(saved_data_4[1]),
+        (unsigned int)(saved_data_4[2]), (unsigned int)(saved_data_4[3]),
+        (unsigned int)(saved_data_4[4]), (unsigned int)(saved_data_4[5]));
 }
 
 void check_lock_status(void)
@@ -677,25 +660,23 @@ void check_lock_status(void)
     if ((proccesing_command_1 != true) || (proccesing_command_2 != true) || \
         (proccesing_command_3 != true) || (proccesing_command_4 != true))
     {
-        char *buffer;
         uint32_t test = test_data[2] & 0b00011100000000000000000000000000;
         test = test >> 26;
         if (((test_data[2] & 0b00011100000000000000000000000000) >> 26) == 0b110)
         {
             if (HAL_GPIO_ReadPin(MUX_OUT_GPIO_Port, MUX_OUT_Pin) == 1)
             {   
-                buffer = "plo locked\r";
+                printf("plo locked\r");
             }
             else
             {
-                buffer = "plo isn't locked\r";
+                printf("plo isn't locked\r");
             }
         }
         else
         {
-            buffer = "plo state is not known\r";
+            printf("plo state is not known\r");
         }
-        CDC_Transmit_FS(buffer, strlen(buffer));
     }
     
 }

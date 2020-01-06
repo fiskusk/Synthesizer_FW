@@ -15,3 +15,13 @@ uint32_t hex2int(char *hex)
     }
     return val;
 }
+
+/*************************************************************************/
+uint32_t lsb_to_msb_bit_reversal(uint32_t input)
+{
+    input = (((input & 0xaaaaaaaa) >> 1) | ((input & 0x55555555) << 1));
+    input = (((input & 0xcccccccc) >> 2) | ((input & 0x33333333) << 2));
+    input = (((input & 0xf0f0f0f0) >> 4) | ((input & 0x0f0f0f0f) << 4));
+    input = (((input & 0xff00ff00) >> 8) | ((input & 0x00ff00ff) << 8));
+    return ((input >> 16) | (input << 16));
+}

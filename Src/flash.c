@@ -31,16 +31,16 @@ void write_data_to_flash(uint8_t position, uint32_t index, uint32_t data)
     switch (position)
     {
         case 1:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, &saved_data_1[index], data);
+            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_1[index]), data);
             break;
         case 2:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, &saved_data_2[index], data);
+            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_2[index]), data);
             break;
         case 3:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, &saved_data_3[index], data);
+            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_3[index]), data);
             break;
         case 4:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, &saved_data_4[index], data);
+            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_4[index]), data);
             break;
     }
     HAL_FLASH_Lock();

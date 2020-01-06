@@ -29,6 +29,7 @@
 #include "max2871.h"
 #include "flash.h"
 #include "timer.h"
+#include "usbd_cdc_if.h"
 #include "stm32f0xx_hal.h"
 #include "stdio.h"
 /* USER CODE END Includes */
@@ -64,6 +65,13 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+int _write(int file, char const *buf, int n)
+{
+    /* stdout redirection to USB */
+    CDC_Transmit_FS((uint8_t*)(buf), n);
+    return n;
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -96,6 +104,8 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
+  setbuf(stdout, NULL);
+
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
     HAL_TIM_Base_Start_IT(&htim3);

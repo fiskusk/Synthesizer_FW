@@ -77,6 +77,7 @@ void Error_Handler(void);
 #define JP2_GPIO_Port GPIOA
 #define PLO_MUXOUT_Pin GPIO_PIN_1
 #define PLO_MUXOUT_GPIO_Port GPIOB
+#define PLO_MUXOUT_EXTI_IRQn EXTI0_1_IRQn
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

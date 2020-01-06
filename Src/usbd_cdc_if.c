@@ -663,7 +663,7 @@ void check_lock_status(void)
         test = test >> 26;
         if (((test_data[2] & 0b00011100000000000000000000000000) >> 26) == 0b110)
         {
-            if (HAL_GPIO_ReadPin(MUX_OUT_GPIO_Port, MUX_OUT_Pin) == 1)
+            if (HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin) == 1)
             {   
                 printf("plo locked\r");
             }

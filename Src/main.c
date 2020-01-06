@@ -104,11 +104,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
-  setbuf(stdout, NULL);
-
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
     HAL_TIM_Base_Start_IT(&htim3);
+    setbuf(stdout, NULL);
   /* USER CODE END 2 */
 
   /* Infinite loop */

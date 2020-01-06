@@ -99,10 +99,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = MUX_OUT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pin = PLO_MUXOUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(MUX_OUT_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(PLO_MUXOUT_GPIO_Port, &GPIO_InitStruct);
 
 }
 

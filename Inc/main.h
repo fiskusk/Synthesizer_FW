@@ -73,8 +73,10 @@ void Error_Handler(void);
 #define RF_OUT2_GPIO_Port GPIOA
 #define JP1_Pin GPIO_PIN_6
 #define JP1_GPIO_Port GPIOA
+#define JP1_EXTI_IRQn EXTI4_15_IRQn
 #define JP2_Pin GPIO_PIN_7
 #define JP2_GPIO_Port GPIOA
+#define JP2_EXTI_IRQn EXTI4_15_IRQn
 #define PLO_MUXOUT_Pin GPIO_PIN_1
 #define PLO_MUXOUT_GPIO_Port GPIOB
 #define PLO_MUXOUT_EXTI_IRQn EXTI0_1_IRQn

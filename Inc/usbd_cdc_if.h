@@ -91,7 +91,12 @@
 extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
+extern uint32_t test_data[6];
 
+extern bool proccesing_command_1;
+extern bool proccesing_command_2;
+extern bool proccesing_command_3;
+extern bool proccesing_command_4;
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**
@@ -107,8 +112,9 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
 extern void check_lock_status(void);
-extern void proccesing_command_data();
+extern void procesing_command_data();
 extern uint32_t hex2int(char *hex);
+extern void process_lock_status(void);
 
 /* USER CODE END EXPORTED_FUNCTIONS */
 

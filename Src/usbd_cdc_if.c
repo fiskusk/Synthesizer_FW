@@ -26,6 +26,7 @@
 #include "max2871.h"
 #include "flash.h"
 #include "main.h"
+#include "stdio.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -527,7 +528,7 @@ uint32_t usb_process_command(char *command_data)
         }
         else if (strcasecmp(sub_token, "locked?") == 0)
         {
-            check_lock_status();
+            plo_check_lock_status();
             plo_new_data=PLO_DATA_SENDED;
         }
         else if (strcasecmp(sub_token, "storedData") == 0)
@@ -539,99 +540,117 @@ uint32_t usb_process_command(char *command_data)
     return 0;
 }
 
-void proccesing_command_data()
+void procesing_command_data()
 {
-    if (proccesing_command_1 == true || proccesing_command_2 == true || proccesing_command_3 == true || proccesing_command_4 == true)
+    if (proccesing_command_1 == true)
     {
-        if (proccesing_command_1 == true)
+        uint32_t new_register_value1 = usb_process_command(command_data_1);
+        if (plo_new_data == PLO_INIT)
         {
-            uint32_t new_register_value1 = usb_process_command(command_data_1);
-            if (plo_new_data == PLO_INIT)
-            {
-                // toggle pin for trigger logic analyzer
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_OUT_ENABLE);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            else if (plo_new_data == PLO_CHANGED_REGISTER)
-            {
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_register(new_register_value1);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            proccesing_command_1 = false;
+            // toggle pin for trigger logic analyzer
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+            plo_write_all(test_data, PLO_INIT);
+            plo_write_all(test_data, PLO_INIT);
+            plo_write_all(test_data, PLO_OUT_ENABLE);
+            plo_new_data=PLO_DATA_SENDED;
         }
-        if (proccesing_command_2 == true)
+        else if (plo_new_data == PLO_CHANGED_REGISTER)
         {
-            uint32_t new_register_value2 = usb_process_command(command_data_2);
-            if (plo_new_data == PLO_INIT)
-            {
-                // toggle pin for trigger logic analyzer
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_OUT_ENABLE);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            else if (plo_new_data == PLO_CHANGED_REGISTER)
-            {
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_register(new_register_value2);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            proccesing_command_2 = false;
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+            plo_write_register(new_register_value1);
+            plo_new_data=PLO_DATA_SENDED;
         }
-        if (proccesing_command_3 == true)
+        proccesing_command_1 = false;
+    }
+    if (proccesing_command_2 == true)
+    {
+        uint32_t new_register_value2 = usb_process_command(command_data_2);
+        if (plo_new_data == PLO_INIT)
         {
-            uint32_t new_register_value3 = usb_process_command(command_data_3);
-            if (plo_new_data == PLO_INIT)
-            {
-                // toggle pin for trigger logic analyzer
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_OUT_ENABLE);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            else if (plo_new_data == PLO_CHANGED_REGISTER)
-            {
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_register(new_register_value3);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            proccesing_command_3 = false;
+            // toggle pin for trigger logic analyzer
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+            plo_write_all(test_data, PLO_INIT);
+            plo_write_all(test_data, PLO_INIT);
+            plo_write_all(test_data, PLO_OUT_ENABLE);
+            plo_new_data=PLO_DATA_SENDED;
         }
-        if (proccesing_command_4 == true)
+        else if (plo_new_data == PLO_CHANGED_REGISTER)
         {
-            uint32_t new_register_value4 = usb_process_command(command_data_4);
-            if (plo_new_data == PLO_INIT)
-            {
-                // toggle pin for trigger logic analyzer
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_INIT);
-                plo_write_all(test_data, PLO_OUT_ENABLE);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            else if (plo_new_data == PLO_CHANGED_REGISTER)
-            {
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-                plo_write_register(new_register_value4);
-                plo_new_data=PLO_DATA_SENDED;
-            }
-            proccesing_command_4 = false;
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+            plo_write_register(new_register_value2);
+            plo_new_data=PLO_DATA_SENDED;
+        }
+        proccesing_command_2 = false;
+    }
+    if (proccesing_command_3 == true)
+    {
+        uint32_t new_register_value3 = usb_process_command(command_data_3);
+        if (plo_new_data == PLO_INIT)
+        {
+            // toggle pin for trigger logic analyzer
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+            plo_write_all(test_data, PLO_INIT);
+            plo_write_all(test_data, PLO_INIT);
+            plo_write_all(test_data, PLO_OUT_ENABLE);
+            plo_new_data=PLO_DATA_SENDED;
+        }
+        else if (plo_new_data == PLO_CHANGED_REGISTER)
+        {
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+            plo_write_register(new_register_value3);
+            plo_new_data=PLO_DATA_SENDED;
+        }
+        proccesing_command_3 = false;
+    }
+    if (proccesing_command_4 == true)
+    {
+        uint32_t new_register_value4 = usb_process_command(command_data_4);
+        if (plo_new_data == PLO_INIT)
+        {
+            // toggle pin for trigger logic analyzer
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+            plo_write_all(test_data, PLO_INIT);
+            plo_write_all(test_data, PLO_INIT);
+            plo_write_all(test_data, PLO_OUT_ENABLE);
+            plo_new_data=PLO_DATA_SENDED;
+        }
+        else if (plo_new_data == PLO_CHANGED_REGISTER)
+        {
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
+            plo_write_register(new_register_value4);
+            plo_new_data=PLO_DATA_SENDED;
+        }
+        proccesing_command_4 = false;
+    }
+}
+
+void process_lock_status(void)
+{
+    if (plo_lock_state != PLO_LOCK_STATE_UNKNOWN)
+    {
+        if (plo_lock_state == PLO_LOCKED)
+        {   
+            printf("plo locked\r");
+        }
+        else if (plo_lock_state == PLO_UNLOCKED)
+        {
+            printf("plo isn't locked\r");
         }
     }
+    else
+    {
+        printf("plo state is not known\r");
+    }
+    plo_lock_state = PLO_LOCK_STATE_WAIT;
+
 }
 
 void flash_send_stored_data(void)
@@ -652,32 +671,6 @@ void flash_send_stored_data(void)
         (unsigned int)(saved_data_4[0]), (unsigned int)(saved_data_4[1]),
         (unsigned int)(saved_data_4[2]), (unsigned int)(saved_data_4[3]),
         (unsigned int)(saved_data_4[4]), (unsigned int)(saved_data_4[5]));
-}
-
-void check_lock_status(void)
-{
-    if ((proccesing_command_1 != true) || (proccesing_command_2 != true) || \
-        (proccesing_command_3 != true) || (proccesing_command_4 != true))
-    {
-        uint32_t test = test_data[2] & 0b00011100000000000000000000000000;
-        test = test >> 26;
-        if (((test_data[2] & 0b00011100000000000000000000000000) >> 26) == 0b110)
-        {
-            if (HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin) == 1)
-            {   
-                printf("plo locked\r");
-            }
-            else
-            {
-                printf("plo isn't locked\r");
-            }
-        }
-        else
-        {
-            printf("plo state is not known\r");
-        }
-    }
-    
 }
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 

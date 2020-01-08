@@ -1,7 +1,9 @@
 #include "max2871.h"
 #include "gpio.h"
 #include "format.h"
+#include "usbd_cdc_if.h"
 
+volatile plo_lock_state_t plo_lock_state = PLO_LOCK_STATE_WAIT;
 volatile plo_new_data_t plo_new_data = PLO_DATA_SENDED;
 
 /*************************************************************************/
@@ -58,4 +60,25 @@ void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)
         if (plo_write_type == PLO_OUT_ENABLE)
             i=-1;
     }  
+}
+
+void plo_check_lock_status(void)
+{
+    uint32_t test = test_data[2] & 0b00011100000000000000000000000000;
+    test = test >> 26;
+    if (((test_data[2] & 0b00011100000000000000000000000000) >> 26) == 0b110)
+    {
+        if (HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin) == 1)
+        {   
+            plo_lock_state = PLO_LOCKED;
+        }
+        else
+        {
+            plo_lock_state = PLO_UNLOCKED;
+        }
+    }
+    else
+    {
+        plo_lock_state = PLO_LOCK_STATE_UNKNOWN;
+    }
 }

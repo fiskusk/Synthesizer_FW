@@ -123,7 +123,7 @@ int main(void)
         static uint8_t cnt = 0;
         if (cnt > 1)
         {
-            check_lock_status();
+            //check_lock_status();
             tick_handle = TICK_NOT_OCCUR;
             cnt = 0;
         }
@@ -134,7 +134,17 @@ int main(void)
         }
     }
     
-    proccesing_command_data();
+    if (plo_lock_state != PLO_LOCK_STATE_WAIT)
+    {
+        process_lock_status();
+    }
+    
+
+    if (proccesing_command_1 == true || proccesing_command_2 == true ||
+        proccesing_command_3 == true || proccesing_command_4 == true)
+    {
+        procesing_command_data();
+    }
     /*
     HAL_GPIO_WritePin(MUX_OUT_GPIO_Port, MUX_OUT_Pin, GPIO_PIN_RESET);
     HAL_Delay(250);

@@ -2,6 +2,7 @@
 #include "gpio.h"
 #include "format.h"
 #include "usbd_cdc_if.h"
+#include "stm32f0xx_it.h"
 
 
 __attribute__((__section__(".user_data"))) uint32_t saved_data_1[6];
@@ -54,4 +55,13 @@ void write_complete_data_to_flash(uint8_t possition, char *val0, char *val1, cha
     write_data_to_flash(possition, 3, hex2int(val3));
     write_data_to_flash(possition, 4, hex2int(val4));
     write_data_to_flash(possition, 5, hex2int(val5));
+}
+
+void memory_select_check(void)
+{
+    HAL_Delay(500);
+    volatile uint8_t bit0 = HAL_GPIO_ReadPin(JP2_GPIO_Port, JP2_Pin);
+    volatile uint8_t bit1 = HAL_GPIO_ReadPin(JP1_GPIO_Port, JP1_Pin);
+    volatile uint8_t jp_select_bits = bit0 | (bit1 << 1);
+    memory_select_event = MEMORY_SELECT_WAIT;
 }

@@ -91,6 +91,13 @@
 extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
+typedef enum{
+    HOST_COM_PORT_OPEN, 
+    HOST_COM_PORT_CLOSED
+}host_com_port_open_closed_t;
+
+extern host_com_port_open_closed_t host_com_port_open_closed;
+
 extern uint32_t test_data[6];
 
 extern bool proccesing_command_1;

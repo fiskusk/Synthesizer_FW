@@ -43,7 +43,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+volatile memory_select_event_t memory_select_event = MEMORY_SELECT_WAIT;
+volatile memory_select_state_t memory_select_state;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -161,7 +162,7 @@ void EXTI0_1_IRQHandler(void)
 void EXTI4_15_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI4_15_IRQn 0 */
-
+  memory_select_event = MEMORY_SELECT_CHANGED;
   /* USER CODE END EXTI4_15_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);

@@ -37,7 +37,7 @@
 /* Private variables ---------------------------------------------------------*/
 uint8_t buffer[7];
 uint32_t test_data[6] = {0x80C80000, 0x800103E9, 0x00005F42, 0x00001F23, 0x63BE80E4, 0x00400005};
-
+host_com_port_open_closed_t host_com_port_open_closed;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -198,6 +198,7 @@ static int8_t CDC_DeInit_FS(void)
 static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 {
   /* USER CODE BEGIN 5 */
+  USBD_SetupReqTypedef * req;
   switch(cmd)
   {
     case CDC_SEND_ENCAPSULATED_COMMAND:
@@ -258,7 +259,11 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
     break;
 
     case CDC_SET_CONTROL_LINE_STATE:
-
+        req = (USBD_SetupReqTypedef *)pbuf;
+        if((req->wValue & 0x0001) != 0)
+            host_com_port_open_closed = HOST_COM_PORT_OPEN;
+        else
+            host_com_port_open_closed = HOST_COM_PORT_CLOSED;
     break;
 
     case CDC_SEND_BREAK:

@@ -31,6 +31,7 @@
 #include "timer.h"
 #include "usbd_cdc_if.h"
 #include "stm32f0xx_hal.h"
+#include "stm32f0xx_it.h"
 #include "stdio.h"
 /* USER CODE END Includes */
 
@@ -132,6 +133,17 @@ int main(void)
             cnt++;
             tick_handle = TICK_NOT_OCCUR;
         }
+    }
+    
+    if (host_com_port_open_closed == HOST_COM_PORT_OPEN)
+    {
+        HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
+    }
+    else
+    {
+        HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET);
+        if (memory_select_event == MEMORY_SELECT_CHANGED)
+            memory_select_check();
     }
     
     if (plo_lock_state != PLO_LOCK_STATE_WAIT)

@@ -118,26 +118,21 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-    if ((tick_handle == TICK_OCCUR) )
-    {
-        static uint8_t cnt = 0;
-        if (cnt > 1)
-        {
-            //check_lock_status();
-            tick_handle = TICK_NOT_OCCUR;
-            cnt = 0;
-        }
-        else
-        {
-            cnt++;
-            tick_handle = TICK_NOT_OCCUR;
-        }
-    }
     
     if (host_com_port_open_closed == HOST_COM_PORT_OPEN)
     {
         HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
+
+        if (plo_lock_state != PLO_LOCK_STATE_WAIT)
+        {
+            process_lock_status();
+        }
+
+        if (proccesing_command_1 == true || proccesing_command_2 == true ||
+            proccesing_command_3 == true || proccesing_command_4 == true)
+        {
+            procesing_command_data();
+        }
     }
     else
     {
@@ -145,23 +140,6 @@ int main(void)
         if (memory_select_event == MEMORY_SELECT_CHANGED)
             memory_select_check();
     }
-    
-    if (plo_lock_state != PLO_LOCK_STATE_WAIT)
-    {
-        process_lock_status();
-    }
-    
-
-    if (proccesing_command_1 == true || proccesing_command_2 == true ||
-        proccesing_command_3 == true || proccesing_command_4 == true)
-    {
-        procesing_command_data();
-    }
-    /*
-    HAL_GPIO_WritePin(MUX_OUT_GPIO_Port, MUX_OUT_Pin, GPIO_PIN_RESET);
-    HAL_Delay(250);
-    HAL_GPIO_WritePin(MUX_OUT_GPIO_Port, MUX_OUT_Pin, GPIO_PIN_SET);
-    HAL_Delay(250);*/
   }
   /* USER CODE END 3 */
 }

@@ -432,6 +432,7 @@ uint32_t usb_process_command(char *command_data)
     char *value3;
     char *value4;
     char *value5;
+    char *value6;
 
     for (uint8_t i = 0; i < strlen(command_data); i++)
     {
@@ -482,6 +483,8 @@ uint32_t usb_process_command(char *command_data)
         value3 = strtok(NULL, " ");
         value4 = strtok(NULL, " ");
         value5 = strtok(NULL, " ");
+        value6 = strtok(NULL, " ");
+
         if (strcasecmp(sub_token, "init") == 0)
         {
             plo_new_data = PLO_INIT;
@@ -515,19 +518,19 @@ uint32_t usb_process_command(char *command_data)
                 myFLASH_PageErase(0x08007800);
             else if (strcasecmp(value, "1") == 0)
             {
-                write_complete_data_to_flash(1, value0, value1, value2, value3, value4, value5);
+                write_complete_data_to_flash(1, value0, value1, value2, value3, value4, value5, value6);
             }
             else if (strcasecmp(value, "2") == 0)
             {
-                write_complete_data_to_flash(2, value0, value1, value2, value3, value4, value5);
+                write_complete_data_to_flash(2, value0, value1, value2, value3, value4, value5, value6);
             }
             else if (strcasecmp(value, "3") == 0)
             {
-                write_complete_data_to_flash(3, value0, value1, value2, value3, value4, value5);
+                write_complete_data_to_flash(3, value0, value1, value2, value3, value4, value5, value6);
             }
             else if (strcasecmp(value, "4") == 0)
             {
-                write_complete_data_to_flash(4, value0, value1, value2, value3, value4, value5);
+                write_complete_data_to_flash(4, value0, value1, value2, value3, value4, value5, value6);
             }
             plo_new_data=PLO_DATA_SENDED;
         }

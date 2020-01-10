@@ -73,6 +73,42 @@ int _write(int file, char const *buf, int n)
     return n;
 }
 
+void running_routine(void)
+{
+    if (host_com_port_open_closed == HOST_COM_PORT_OPEN)
+    {
+        PLO_MODULE_OUT2_ON; // TODO for test purpose only
+
+        if (plo_lock_state != PLO_LOCK_STATE_WAIT)
+        {
+            process_lock_status();
+        }
+
+        if (proccesing_command_1 == true || proccesing_command_2 == true ||
+            proccesing_command_3 == true || proccesing_command_4 == true)
+        {
+            procesing_command_data();
+        }
+    }
+    else
+    {
+        PLO_MODULE_OUT2_OFF; // TODO for test purpose only
+        if (memory_select_event == MEMORY_SELECT_CHANGED)
+            apply_memory_select_changed();
+    }
+}
+
+
+
+void init_routine(void)
+{
+    if (saved_data_1[0] == 0x0)
+    {
+        load_default_memory_register_values();
+    }
+    memory_select_init();
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -92,7 +128,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-    
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -109,6 +145,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
     HAL_TIM_Base_Start_IT(&htim3);
     setbuf(stdout, NULL);
+
+    HAL_Delay(1000);
+    init_routine();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -118,28 +158,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    
-    if (host_com_port_open_closed == HOST_COM_PORT_OPEN)
-    {
-        HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
-
-        if (plo_lock_state != PLO_LOCK_STATE_WAIT)
-        {
-            process_lock_status();
-        }
-
-        if (proccesing_command_1 == true || proccesing_command_2 == true ||
-            proccesing_command_3 == true || proccesing_command_4 == true)
-        {
-            procesing_command_data();
-        }
-    }
-    else
-    {
-        HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET);
-        if (memory_select_event == MEMORY_SELECT_CHANGED)
-            memory_select_check();
-    }
+    running_routine();
   }
   /* USER CODE END 3 */
 }

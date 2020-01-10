@@ -261,9 +261,14 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
     case CDC_SET_CONTROL_LINE_STATE:
         req = (USBD_SetupReqTypedef *)pbuf;
         if((req->wValue & 0x0001) != 0)
+        {
             host_com_port_open_closed = HOST_COM_PORT_OPEN;
+        }
         else
+        {
+            apply_memory_select_changed();
             host_com_port_open_closed = HOST_COM_PORT_CLOSED;
+        }
     break;
 
     case CDC_SEND_BREAK:
@@ -353,7 +358,7 @@ static void usb_data_avaible(uint8_t c)
         if (cnt1 < CMD_BUFFER_LEN) 
             command_data_1[cnt1++] = c; 
         else 
-            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET); 
+            printf("pretecen buff 1"); 
         // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
         if (c == '\n' || c == '\r')
         {
@@ -370,7 +375,7 @@ static void usb_data_avaible(uint8_t c)
         if (cnt2 < CMD_BUFFER_LEN) 
             command_data_2[cnt2++] = c; 
         else 
-            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
+            printf("pretecen buff 2");
         // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
         if (c == '\n' || c == '\r')
         {
@@ -387,7 +392,7 @@ static void usb_data_avaible(uint8_t c)
         if (cnt3 < CMD_BUFFER_LEN) 
             command_data_3[cnt3++] = c; 
         else 
-            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
+            printf("pretecen buff 3");
         // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
         if (c == '\n' || c == '\r')
         {
@@ -404,7 +409,7 @@ static void usb_data_avaible(uint8_t c)
         if (cnt4 < CMD_BUFFER_LEN) 
             command_data_4[cnt4++] = c; 
         else 
-            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
+            printf("pretecen buff 4");
         // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
         if (c == '\n' || c == '\r')
         {
@@ -417,7 +422,7 @@ static void usb_data_avaible(uint8_t c)
     else
     // kdyz je i ten plny, nahod chybu nastavenim externi signal reference
     {
-        HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
+        printf("pretecen buff all");
     }
 }
 
@@ -445,11 +450,11 @@ uint32_t usb_process_command(char *command_data)
     {
         value = strtok(NULL, " ");
         if (strcasecmp(value, "ext") == 0) {
-            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET);
+            PLO_MODULE_EXT_REF;
         }
 
         else if (strcasecmp(value, "int") == 0) {
-            HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_RESET);
+            PLO_MODULE_INT_REF;
         }
         plo_new_data=PLO_DATA_SENDED;
     }
@@ -460,15 +465,15 @@ uint32_t usb_process_command(char *command_data)
         value = strtok(NULL, " ");
         if (strcasecmp(sub_token, "1") == 0) {
             if (strcasecmp(value, "on") == 0)
-                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_RESET);
+                PLO_MODULE_OUT1_ON;
             else if (strcasecmp(value, "off") == 0)
-                HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_SET);
+                PLO_MODULE_OUT1_OFF;
         }
         else if (strcasecmp(sub_token, "2") == 0) {
             if (strcasecmp(value, "on") == 0)
-                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET);
+                PLO_MODULE_OUT2_ON;
             else if (strcasecmp(value, "off") == 0)
-                HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET);
+                PLO_MODULE_OUT2_OFF;
         }
         plo_new_data=PLO_DATA_SENDED;
     }

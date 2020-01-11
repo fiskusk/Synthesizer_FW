@@ -21,20 +21,9 @@ __attribute__((__section__(".user_data"))) uint32_t saved_data_4[7];
 
 void change_plo_module_states(uint32_t control_register)
 {
-    if (control_register & (1<<0))
-        PLO_MODULE_OUT1_ON;
-    else
-        PLO_MODULE_OUT1_OFF;
-    
-    if ((control_register & (1<<1)) >> 1)
-        PLO_MODULE_OUT2_ON;
-    else
-        PLO_MODULE_OUT2_OFF;
-
-    if ((control_register & (1<<2)) >> 2)
-        PLO_MODULE_EXT_REF;    
-    else
-        PLO_MODULE_INT_REF;
+    (control_register & (1<<0)) ? PLO_MODULE_OUT1_ON : PLO_MODULE_OUT1_OFF;
+    ((control_register & (1<<1)) >> 1) ? PLO_MODULE_OUT2_ON : PLO_MODULE_OUT2_OFF;
+    ((control_register & (1<<2)) >> 2) ? PLO_MODULE_EXT_REF : PLO_MODULE_INT_REF;
 }
 
 void myFLASH_PageErase(uint32_t address)
@@ -74,7 +63,9 @@ void write_data_to_flash(uint8_t position, uint32_t index, uint32_t data)
     HAL_FLASH_Lock();
 }
 
-void write_complete_data_to_flash(uint8_t possition, char *val0, char *val1, char *val2, char *val3, char *val4, char *val5, char *val6)
+void write_complete_data_to_flash(uint8_t possition, char *val0, 
+                                  char *val1, char *val2, char *val3, 
+                                  char *val4, char *val5, char *val6)
 {
     write_data_to_flash(possition, 0, hex2int(val0));
     write_data_to_flash(possition, 1, hex2int(val1));

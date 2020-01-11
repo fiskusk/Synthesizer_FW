@@ -36,7 +36,9 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 uint8_t buffer[7];
-uint32_t test_data[6] = {0x80C80000, 0x800103E9, 0x00005F42, 0x00001F23, 0x63BE80E4, 0x00400005};
+uint32_t test_data[6] = {DEF_TEST_DATA_REG0, DEF_TEST_DATA_REG1,
+                         DEF_TEST_DATA_REG2, DEF_TEST_DATA_REG3,
+                         DEF_TEST_DATA_REG4, DEF_TEST_DATA_REG5};
 host_com_port_open_closed_t host_com_port_open_closed;
 /* USER CODE END PV */
 
@@ -668,22 +670,26 @@ void process_lock_status(void)
 
 void flash_send_stored_data(void)
 {
-    printf( "stored_data_1 %08x %08x %08x %08x %08x %08x\r", 
+    printf( "stored_data_1 %08x %08x %08x %08x %08x %08x %08x\r", 
         (unsigned int)(saved_data_1[0]), (unsigned int)(saved_data_1[1]),
         (unsigned int)(saved_data_1[2]), (unsigned int)(saved_data_1[3]), 
-        (unsigned int)(saved_data_1[4]), (unsigned int)(saved_data_1[5]));
-    printf("stored_data_2 %08x %08x %08x %08x %08x %08x\r", 
+        (unsigned int)(saved_data_1[4]), (unsigned int)(saved_data_1[5]),
+        (unsigned int)(saved_data_1[6]));
+    printf("stored_data_2 %08x %08x %08x %08x %08x %08x %08x\r", 
         (unsigned int)(saved_data_2[0]), (unsigned int)(saved_data_2[1]),
         (unsigned int)(saved_data_2[2]), (unsigned int)(saved_data_2[3]),
-        (unsigned int)(saved_data_2[4]), (unsigned int)(saved_data_2[5]));
-    printf("stored_data_3 %08x %08x %08x %08x %08x %08x\r", 
+        (unsigned int)(saved_data_2[4]), (unsigned int)(saved_data_2[5]),
+        (unsigned int)(saved_data_2[6]));
+    printf("stored_data_3 %08x %08x %08x %08x %08x %08x %08x\r", 
         (unsigned int)(saved_data_3[0]), (unsigned int)(saved_data_3[1]),
         (unsigned int)(saved_data_3[2]), (unsigned int)(saved_data_3[3]),
-        (unsigned int)(saved_data_3[4]), (unsigned int)(saved_data_3[5]));
-    printf("stored_data_4 %08x %08x %08x %08x %08x %08x\r",
+        (unsigned int)(saved_data_3[4]), (unsigned int)(saved_data_3[5]),
+        (unsigned int)(saved_data_3[6]));
+    printf("stored_data_4 %08x %08x %08x %08x %08x %08x %08x\r",
         (unsigned int)(saved_data_4[0]), (unsigned int)(saved_data_4[1]),
         (unsigned int)(saved_data_4[2]), (unsigned int)(saved_data_4[3]),
-        (unsigned int)(saved_data_4[4]), (unsigned int)(saved_data_4[5]));
+        (unsigned int)(saved_data_4[4]), (unsigned int)(saved_data_4[5]),
+        (unsigned int)(saved_data_4[6]));
 }
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 

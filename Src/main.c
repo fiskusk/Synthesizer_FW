@@ -146,7 +146,7 @@ int main(void)
     HAL_TIM_Base_Start_IT(&htim3);
     setbuf(stdout, NULL);
 
-    HAL_Delay(1000);
+    HAL_Delay(100);
     init_routine();
 
   /* USER CODE END 2 */

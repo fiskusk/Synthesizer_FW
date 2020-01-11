@@ -177,8 +177,16 @@ void apply_memory_select_changed(void)
 void load_default_memory_register_values(void)
 {
     myFLASH_PageErase(0x08007800);
-    write_complete_data_to_flash(1, "80C80008", "800003E9", "18004142", "00001F23", "63BE80FC", "00400005", "1");
-    write_complete_data_to_flash(2, "00C80008", "A00003E9", "18005E42", "00001F23", "63BE80FC", "00400005", "1");
-    write_complete_data_to_flash(3, "00C80010", "A00003E9", "18005E42", "00001F23", "63BE80FC", "00400005", "1");
-    write_complete_data_to_flash(4, "00C783E0", "A00003E9", "18005E42", "00001F23", "63BE80FC", "00400005", "1");
+    write_complete_data_to_flash(1, DEF_MEMORY1_REG0, DEF_MEMORY1_REG1, DEF_MEMORY1_REG2,
+                                    DEF_MEMORY1_REG3, DEF_MEMORY1_REG4, DEF_MEMORY1_REG5, 
+                                    DEF_MEMORY1_REG6);
+    write_complete_data_to_flash(2, DEF_MEMORY2_REG0, DEF_MEMORY2_REG1, DEF_MEMORY2_REG2,
+                                    DEF_MEMORY2_REG3, DEF_MEMORY2_REG4, DEF_MEMORY2_REG5, 
+                                    DEF_MEMORY2_REG6);
+    write_complete_data_to_flash(3, DEF_MEMORY3_REG0, DEF_MEMORY3_REG1, DEF_MEMORY3_REG2,
+                                    DEF_MEMORY3_REG3, DEF_MEMORY3_REG4, DEF_MEMORY3_REG5, 
+                                    DEF_MEMORY3_REG6);
+    write_complete_data_to_flash(4, DEF_MEMORY4_REG0, DEF_MEMORY4_REG1, DEF_MEMORY4_REG2,
+                                    DEF_MEMORY4_REG3, DEF_MEMORY4_REG4, DEF_MEMORY4_REG5, 
+                                    DEF_MEMORY4_REG6);
 }

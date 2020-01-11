@@ -64,9 +64,7 @@ void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)
 
 void plo_check_lock_status(void)
 {
-    uint32_t test = test_data[2] & 0b00011100000000000000000000000000;
-    test = test >> 26;
-    if (((test_data[2] & 0b00011100000000000000000000000000) >> 26) == 0b110)
+    if ( ( (test_data[2] & ((1<<28) | (1<<27) | (1<<26))) >> 26) == 0b110)
     {
         if (HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin) == 1)
         {   

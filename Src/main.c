@@ -66,13 +66,6 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-int _write(int file, char const *buf, int n)
-{
-    /* stdout redirection to USB */
-    CDC_Transmit_FS((uint8_t*)(buf), n);
-    return n;
-}
-
 void running_routine(void)
 {
     if (host_com_port_open_closed == HOST_COM_PORT_OPEN)

@@ -72,8 +72,8 @@ host_com_port_open_closed_t host_com_port_open_closed;
 /* USER CODE BEGIN PRIVATE_DEFINES */
 /* Define size for the receive and transmit buffer over CDC */
 /* It's up to user to redefine and/or remove those define */
-#define APP_RX_DATA_SIZE    250
-#define APP_TX_DATA_SIZE    250
+#define APP_RX_DATA_SIZE    64
+#define APP_TX_DATA_SIZE    64
 /* USER CODE END PRIVATE_DEFINES */
 
 /**
@@ -314,6 +314,45 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   /* USER CODE END 6 */
 }
 
+int _write(int file, char const *buf, int n)
+{
+    /* stdout redirection to USB */
+    uint8_t sent    = 0;
+    uint8_t try_cnt = 0;
+
+    while(!sent)
+    {
+        /* Check if is possible send data ten times maximally */
+        if(((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState == 0)
+        {
+            /* Data send with value check */
+            if(CDC_Transmit_FS((uint8_t*)(buf), n) == USBD_OK)
+            {
+                sent = 1;
+            }
+        }
+        else if(try_cnt > 9)
+        {
+            sent = 1;
+        }
+
+        try_cnt++;
+        if(sent == 0)
+        {
+            HAL_Delay(1);
+        }
+    }
+    //if(((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState==0){
+    //    CDC_Transmit_FS((uint8_t*)(buf), n);
+    //}
+    
+    //if (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState==0)
+    //{
+    //}
+    //CDC_Transmit_FS((uint8_t*)(buf), n);
+    return n;
+}
+
 /**
   * @brief  CDC_Transmit_FS
   *         Data to send over USB IN endpoint are sent over CDC interface
@@ -329,16 +368,16 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
   /* USER CODE BEGIN 7 */
-  uint64_t counter = 0;
-  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
-  if (hcdc->TxState != 0){
-    return USBD_BUSY;
-  }
+  //uint64_t counter = 0;
+  //USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+  //if (hcdc->TxState != 0){
+  //  return USBD_BUSY;
+  //}
   USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
   result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
-  while (hcdc->TxState != 0){
-    counter++;
-  }
+  //while (hcdc->TxState != 0){
+  //  counter++;
+  //}
   /* USER CODE END 7 */
   return result;
 }
@@ -360,7 +399,7 @@ static void usb_data_avaible(uint8_t c)
         if (cnt1 < CMD_BUFFER_LEN) 
             command_data_1[cnt1++] = c; 
         else 
-            printf("pretecen buff 1"); 
+            printf("buff1ovfl\r"); 
         // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
         if (c == '\n' || c == '\r')
         {
@@ -377,7 +416,7 @@ static void usb_data_avaible(uint8_t c)
         if (cnt2 < CMD_BUFFER_LEN) 
             command_data_2[cnt2++] = c; 
         else 
-            printf("pretecen buff 2");
+            printf("buff2ovfl\r");
         // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
         if (c == '\n' || c == '\r')
         {
@@ -394,7 +433,7 @@ static void usb_data_avaible(uint8_t c)
         if (cnt3 < CMD_BUFFER_LEN) 
             command_data_3[cnt3++] = c; 
         else 
-            printf("pretecen buff 3");
+            printf("buff3ovfl\r");
         // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
         if (c == '\n' || c == '\r')
         {
@@ -411,7 +450,7 @@ static void usb_data_avaible(uint8_t c)
         if (cnt4 < CMD_BUFFER_LEN) 
             command_data_4[cnt4++] = c; 
         else 
-            printf("pretecen buff 4");
+            printf("buff4ovfl\r");
         // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
         if (c == '\n' || c == '\r')
         {
@@ -424,7 +463,7 @@ static void usb_data_avaible(uint8_t c)
     else
     // kdyz je i ten plny, nahod chybu nastavenim externi signal reference
     {
-        printf("pretecen buff all");
+        printf("buffallovfl\r");
     }
 }
 

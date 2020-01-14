@@ -77,11 +77,7 @@ void running_routine(void)
             process_lock_status();
         }
 
-        if (proccesing_command_1 == true || proccesing_command_2 == true ||
-            proccesing_command_3 == true || proccesing_command_4 == true)
-        {
-            procesing_command_data();
-        }
+        procesing_command_data();
     }
     else
     {

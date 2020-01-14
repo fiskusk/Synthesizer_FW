@@ -37,7 +37,6 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-#define CMD_BUFFER_LEN 100
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

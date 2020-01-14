@@ -100,10 +100,6 @@ extern host_com_port_open_closed_t host_com_port_open_closed;
 
 extern uint32_t test_data[6];
 
-extern bool proccesing_command_1;
-extern bool proccesing_command_2;
-extern bool proccesing_command_3;
-extern bool proccesing_command_4;
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**

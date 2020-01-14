@@ -27,6 +27,7 @@
 #include "flash.h"
 #include "main.h"
 #include "stdio.h"
+#include "stdint.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,7 +35,20 @@
 /* Private macro -------------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+#define CMD_BUFFER_LEN        96        // Size of each buffer in bytes
+#define CMD_BUFFER_CNT        4        // Total count of buffer
+
+typedef struct
+{
+    uint8_t length;
+    char buffer[CMD_BUFFER_LEN];
+    bool received;
+} cmd_buffer_t;
+
+
 /* Private variables ---------------------------------------------------------*/
+cmd_buffer_t cmd_buffer[CMD_BUFFER_CNT];
+
 uint8_t buffer[7];
 uint32_t test_data[6] = {DEF_TEST_DATA_REG0, DEF_TEST_DATA_REG1,
                          DEF_TEST_DATA_REG2, DEF_TEST_DATA_REG3,
@@ -106,15 +120,7 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
-bool proccesing_command_1 = false;
-bool proccesing_command_2 = false;
-bool proccesing_command_3 = false;
-bool proccesing_command_4 = false;
 
-char command_data_1[CMD_BUFFER_LEN];
-char command_data_2[CMD_BUFFER_LEN];
-char command_data_3[CMD_BUFFER_LEN];
-char command_data_4[CMD_BUFFER_LEN];
 
 /* USER CODE END PRIVATE_VARIABLES */
 
@@ -148,7 +154,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length);
 static int8_t CDC_Receive_FS(uint8_t* pbuf, uint32_t *Len);
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
-static void usb_data_avaible(uint8_t c);
+static void usb_data_available(uint8_t c);
 uint32_t usb_process_command(char *command_data);
 /* USER CODE END PRIVATE_FUNCTIONS_DECLARATION */
 
@@ -302,13 +308,14 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
-    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-    USBD_CDC_ReceivePacket(&hUsbDeviceFS);
     
     for (uint8_t i = 0; i < *Len; i++)
     {
-        usb_data_avaible(Buf[i]);
+        usb_data_available(Buf[i]);
     }
+
+    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
+    USBD_CDC_ReceivePacket(&hUsbDeviceFS);
 
     return (USBD_OK);
   /* USER CODE END 6 */
@@ -317,15 +324,14 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 int _write(int file, char const *buf, int n)
 {
     /* stdout redirection to USB */
+    /*
     uint8_t sent    = 0;
     uint8_t try_cnt = 0;
 
     while(!sent)
     {
-        /* Check if is possible send data ten times maximally */
         if(((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState == 0)
         {
-            /* Data send with value check */
             if(CDC_Transmit_FS((uint8_t*)(buf), n) == USBD_OK)
             {
                 sent = 1;
@@ -341,15 +347,13 @@ int _write(int file, char const *buf, int n)
         {
             HAL_Delay(1);
         }
-    }
+    }*/
     //if(((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState==0){
     //    CDC_Transmit_FS((uint8_t*)(buf), n);
     //}
     
-    //if (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState==0)
-    //{
-    //}
-    //CDC_Transmit_FS((uint8_t*)(buf), n);
+    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){}
+    CDC_Transmit_FS((uint8_t*)(buf), n);
     return n;
 }
 
@@ -386,84 +390,34 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 /****************************************************/
 /****************************************************/
 /****************************************************/
-static void usb_data_avaible(uint8_t c)
+static void usb_data_available(uint8_t c)
 {
-    static uint16_t cnt1;
-    static uint16_t cnt2;
-    static uint16_t cnt3;
-    static uint16_t cnt4;
-    // prvni buffer je volny, pis do nej
-    if (proccesing_command_1 == false)
+    static uint8_t active_buff = 0;
+    uint8_t *pos = &cmd_buffer[active_buff].length;
+
+    if (cmd_buffer[active_buff].received)
+        return;                                         // Buffer not free, cannot receive data...
+
+    if (c == '\n' || c == '\r')
     {
-        // else indikuje chybu, ze doslo k preteceni vstupniho bufferu, nahodi ext ref signal input
-        if (cnt1 < CMD_BUFFER_LEN) 
-            command_data_1[cnt1++] = c; 
-        else 
-            printf("buff1ovfl\r"); 
-        // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
-        if (c == '\n' || c == '\r')
-        {
-            proccesing_command_1 = true;
-            cnt1 = 0;
-            plo_new_data = PLO_NEW_DATA;
-            return;
-        }
-    }
-    // kdyz je prvni zpracovavan, pis do druheho
-    else if (proccesing_command_2 == false)
-    {
-        // else indikuje chybu, ze doslo k preteceni vstupniho bufferu, nahodi ext ref signal input
-        if (cnt2 < CMD_BUFFER_LEN) 
-            command_data_2[cnt2++] = c; 
-        else 
-            printf("buff2ovfl\r");
-        // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
-        if (c == '\n' || c == '\r')
-        {
-            proccesing_command_2 = true;
-            cnt2 = 0;
-            plo_new_data = PLO_NEW_DATA;
-            return;
-        }
-    }
-    // treti buffer pro pripad, ze ani druhý se nestihl vycist
-    else if (proccesing_command_3 == false)
-    {
-        // else indikuje chybu, ze doslo k preteceni vstupniho bufferu, nahodi ext ref signal input
-        if (cnt3 < CMD_BUFFER_LEN) 
-            command_data_3[cnt3++] = c; 
-        else 
-            printf("buff3ovfl\r");
-        // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
-        if (c == '\n' || c == '\r')
-        {
-            proccesing_command_3 = true;
-            cnt3 = 0;
-            plo_new_data = PLO_NEW_DATA;
-            return;
-        }
-    }
-    // ctvrty buffer 
-    else if (proccesing_command_4 == false)
-    {
-        // else indikuje chybu, ze doslo k preteceni vstupniho bufferu, nahodi ext ref signal input
-        if (cnt4 < CMD_BUFFER_LEN) 
-            command_data_4[cnt4++] = c; 
-        else 
-            printf("buff4ovfl\r");
-        // over, jestli uz neprisel ukoncovaci znak, tedy mam cely command
-        if (c == '\n' || c == '\r')
-        {
-            proccesing_command_4 = true;
-            cnt4 = 0;
-            plo_new_data = PLO_NEW_DATA;
-            return;
-        }
+        cmd_buffer[active_buff].buffer[*pos] = 0;       // Add ending zero
+        cmd_buffer[active_buff].received = 1;           // Mark data in buffer as received
+        if (++active_buff >= CMD_BUFFER_CNT)            // Switch to next buffer
+            active_buff = 0;
+
     }
     else
-    // kdyz je i ten plny, nahod chybu nastavenim externi signal reference
     {
-        printf("buffallovfl\r");
+        if (*pos < (CMD_BUFFER_LEN - 1))                // 1 Byte on the end is reserved for zero
+        {
+            cmd_buffer[active_buff].buffer[*pos] = c;   // Save character to buffer
+            *pos = *pos + 1;
+        }
+        else
+        {
+            //TODO: No more space in buffer, cannot store data. What to do with it?
+            *pos = *pos;          // Useless, just for filling in the "else" branch
+        }
     }
 }
 
@@ -596,9 +550,11 @@ uint32_t usb_process_command(char *command_data)
 
 void procesing_command_data()
 {
-    if (proccesing_command_1 == true)
+    static uint8_t active_buff = 0;
+
+    while (cmd_buffer[active_buff].received)        // Check if data in buffer was received
     {
-        uint32_t new_register_value1 = usb_process_command(command_data_1);
+        uint32_t new_register_value = usb_process_command(cmd_buffer[active_buff].buffer);        // Process command
         if (plo_new_data == PLO_INIT)
         {
             // toggle pin for trigger logic analyzer
@@ -613,76 +569,15 @@ void procesing_command_data()
         {
             HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
             HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-            plo_write_register(new_register_value1);
+            plo_write_register(new_register_value);
             plo_new_data=PLO_DATA_SENDED;
         }
-        proccesing_command_1 = false;
-    }
-    if (proccesing_command_2 == true)
-    {
-        uint32_t new_register_value2 = usb_process_command(command_data_2);
-        if (plo_new_data == PLO_INIT)
-        {
-            // toggle pin for trigger logic analyzer
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-            plo_write_all(test_data, PLO_INIT);
-            plo_write_all(test_data, PLO_INIT);
-            plo_write_all(test_data, PLO_OUT_ENABLE);
-            plo_new_data=PLO_DATA_SENDED;
-        }
-        else if (plo_new_data == PLO_CHANGED_REGISTER)
-        {
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-            plo_write_register(new_register_value2);
-            plo_new_data=PLO_DATA_SENDED;
-        }
-        proccesing_command_2 = false;
-    }
-    if (proccesing_command_3 == true)
-    {
-        uint32_t new_register_value3 = usb_process_command(command_data_3);
-        if (plo_new_data == PLO_INIT)
-        {
-            // toggle pin for trigger logic analyzer
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-            plo_write_all(test_data, PLO_INIT);
-            plo_write_all(test_data, PLO_INIT);
-            plo_write_all(test_data, PLO_OUT_ENABLE);
-            plo_new_data=PLO_DATA_SENDED;
-        }
-        else if (plo_new_data == PLO_CHANGED_REGISTER)
-        {
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-            plo_write_register(new_register_value3);
-            plo_new_data=PLO_DATA_SENDED;
-        }
-        proccesing_command_3 = false;
-    }
-    if (proccesing_command_4 == true)
-    {
-        uint32_t new_register_value4 = usb_process_command(command_data_4);
-        if (plo_new_data == PLO_INIT)
-        {
-            // toggle pin for trigger logic analyzer
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-            plo_write_all(test_data, PLO_INIT);
-            plo_write_all(test_data, PLO_INIT);
-            plo_write_all(test_data, PLO_OUT_ENABLE);
-            plo_new_data=PLO_DATA_SENDED;
-        }
-        else if (plo_new_data == PLO_CHANGED_REGISTER)
-        {
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-            plo_write_register(new_register_value4);
-            plo_new_data=PLO_DATA_SENDED;
-        }
-        proccesing_command_4 = false;
+
+        cmd_buffer[active_buff].length = 0;            // Data in buffer processed, clear the length and
+        cmd_buffer[active_buff].received = 0;        // mark it as free
+
+        if (++active_buff >= CMD_BUFFER_CNT)        // Switch to next buffer
+            active_buff = 0;
     }
 }
 

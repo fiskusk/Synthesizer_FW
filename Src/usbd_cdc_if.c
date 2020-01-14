@@ -36,7 +36,7 @@
 
 /* USER CODE BEGIN PV */
 #define CMD_BUFFER_LEN        96        // Size of each buffer in bytes
-#define CMD_BUFFER_CNT        4        // Total count of buffer
+#define CMD_BUFFER_CNT        2        // Total count of buffer
 
 typedef struct
 {
@@ -451,6 +451,7 @@ uint32_t usb_process_command(char *command_data)
         else if (strcasecmp(value, "int") == 0) {
             PLO_MODULE_INT_REF;
         }
+        printf("OK\r");
         plo_new_data=PLO_DATA_SENDED;
     }
 
@@ -470,6 +471,7 @@ uint32_t usb_process_command(char *command_data)
             else if (strcasecmp(value, "off") == 0)
                 PLO_MODULE_OUT2_OFF;
         }
+        printf("OK\r");
         plo_new_data=PLO_DATA_SENDED;
     }
     
@@ -515,7 +517,9 @@ uint32_t usb_process_command(char *command_data)
         else if (strcasecmp(sub_token, "data") == 0)
         {
             if (strcasecmp(value, "clean") == 0)
+            {
                 myFLASH_PageErase(0x08007800);
+            }
             else if (strcasecmp(value, "1") == 0)
             {
                 write_complete_data_to_flash(1, value0, value1, value2, value3, value4, value5, value6);
@@ -532,15 +536,18 @@ uint32_t usb_process_command(char *command_data)
             {
                 write_complete_data_to_flash(4, value0, value1, value2, value3, value4, value5, value6);
             }
+            printf("OK\r");
             plo_new_data=PLO_DATA_SENDED;
         }
         else if (strcasecmp(sub_token, "locked?") == 0)
         {
             plo_check_lock_status();
+            printf("OK\r");
             plo_new_data=PLO_DATA_SENDED;
         }
         else if (strcasecmp(sub_token, "storedData") == 0)
         {
+            printf("OK\r");
             flash_send_stored_data();
             plo_new_data=PLO_DATA_SENDED;
         }
@@ -563,6 +570,7 @@ void procesing_command_data()
             plo_write_all(test_data, PLO_INIT);
             plo_write_all(test_data, PLO_INIT);
             plo_write_all(test_data, PLO_OUT_ENABLE);
+            printf("OK\r");
             plo_new_data=PLO_DATA_SENDED;
         }
         else if (plo_new_data == PLO_CHANGED_REGISTER)
@@ -570,6 +578,7 @@ void procesing_command_data()
             HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
             HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
             plo_write_register(new_register_value);
+            printf("OK\r");
             plo_new_data=PLO_DATA_SENDED;
         }
 

@@ -117,7 +117,7 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 extern void check_lock_status(void);
 extern void procesing_command_data();
 extern uint32_t hex2int(char *hex);
-extern void process_lock_status(void);
+extern void process_lock_status(bool data);
 
 /* USER CODE END EXPORTED_FUNCTIONS */
 

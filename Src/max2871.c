@@ -6,6 +6,40 @@
 volatile plo_lock_state_t plo_lock_state = PLO_LOCK_STATE_WAIT;
 volatile plo_new_data_t plo_new_data = PLO_DATA_SENDED;
 
+typedef struct
+{
+    uint8_t incnt;
+    uint8_t outcnt;
+    uint32_t buffer;
+} plo_state_t;
+
+plo_state_t plo_state = {0};
+
+/*****************************************************************************/
+void plo_buff_push(bool in_data)
+{
+    if ((plo_state.incnt + 1) % 32 == plo_state.outcnt)
+        return;            // Buffer is full. Cannot store more data
+
+    if (in_data)
+        plo_state.buffer |= (1 << plo_state.incnt);    // Save logic 1 to buffer
+    else
+        plo_state.buffer &= ~(1 << plo_state.incnt);    // Save logic 0 to buffer
+
+    plo_state.incnt = (plo_state.incnt + 1) % 32;    // Move "in" pointer
+}
+
+/*****************************************************************************/
+bool plo_buff_pop(bool * out_data)
+{
+    if (plo_state.incnt == plo_state.outcnt)
+        return false;                                // No data in buffer, nothing to do
+
+    *out_data = (plo_state.buffer >> plo_state.outcnt) & 1;
+    plo_state.outcnt = (plo_state.outcnt + 1) % 32;    // Move "out" pointer
+    return true;
+}
+
 /*****************************************************************************/
 void plo_spi_emul(uint32_t data)
 {
@@ -58,8 +92,7 @@ void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)
 void plo_check_lock_status(void)
 {
     if ( ( (test_data[2] & ((1<<28) | (1<<27) | (1<<26))) >> 26) == 0b110)
-        (HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin) == 1) ?
-            (plo_lock_state = PLO_LOCKED) : (plo_lock_state = PLO_UNLOCKED);
+        plo_buff_push(HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin));
     else
         plo_lock_state = PLO_LOCK_STATE_UNKNOWN;
 }

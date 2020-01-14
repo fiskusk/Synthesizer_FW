@@ -71,10 +71,14 @@ void running_routine(void)
     if (host_com_port_open_closed == HOST_COM_PORT_OPEN)
     {
         PLO_MODULE_OUT2_ON; // TODO for test purpose only
+        
+        bool *data;
+        bool is_data = plo_buff_pop(data);
 
-        if (plo_lock_state != PLO_LOCK_STATE_WAIT)
+        while ((plo_lock_state != PLO_LOCK_STATE_WAIT) || is_data )
         {
-            process_lock_status();
+            process_lock_status(data);
+            is_data = plo_buff_pop(data);
         }
 
         procesing_command_data();

@@ -1,6 +1,7 @@
 #ifndef _MAX2871_H
 #define _MAX2871_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #define PLO_DATA_SET HAL_GPIO_WritePin(PLO_DATA_GPIO_Port, PLO_DATA_Pin, GPIO_PIN_SET)
@@ -19,8 +20,7 @@ typedef enum{
 }plo_new_data_t;
 
 typedef enum{
-    PLO_LOCKED,
-    PLO_UNLOCKED,
+    PLO_LOCK_STATE_CHANGED,
     PLO_LOCK_STATE_UNKNOWN,
     PLO_LOCK_STATE_WAIT
 }plo_lock_state_t;
@@ -31,5 +31,6 @@ extern volatile plo_new_data_t plo_new_data;
 extern void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type);
 extern void plo_write_register(uint32_t register_data);
 extern void plo_check_lock_status(void);
+extern bool plo_buff_pop(bool * out_data);
 
 #endif

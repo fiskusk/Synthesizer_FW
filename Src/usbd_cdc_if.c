@@ -590,15 +590,15 @@ void procesing_command_data()
     }
 }
 
-void process_lock_status(void)
+void process_lock_status(bool data)
 {
     if (plo_lock_state != PLO_LOCK_STATE_UNKNOWN)
     {
-        if (plo_lock_state == PLO_LOCKED)
+        if (data)
         {   
             printf("plo locked\r");
         }
-        else if (plo_lock_state == PLO_UNLOCKED)
+        else
         {
             printf("plo isn't locked\r");
         }

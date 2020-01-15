@@ -22,15 +22,15 @@ void plo_buff_push(bool in_data)
         return;            // Buffer is full. Cannot store more data
 
     if (in_data)
-        plo_state.buffer |= (1 << plo_state.incnt);    // Save logic 1 to buffer
+        plo_state.buffer |= (1UL << plo_state.incnt);    // Save logic 1 to buffer
     else
-        plo_state.buffer &= ~(1 << plo_state.incnt);    // Save logic 0 to buffer
+        plo_state.buffer &= ~(1UL << plo_state.incnt);    // Save logic 0 to buffer
 
     plo_state.incnt = (plo_state.incnt + 1) % 32;    // Move "in" pointer
 }
 
 /*****************************************************************************/
-bool plo_buff_pop(bool * out_data)
+bool plo_buff_pop(uint8_t * out_data)
 {
     if (plo_state.incnt == plo_state.outcnt)
         return false;                                // No data in buffer, nothing to do
@@ -93,6 +93,4 @@ void plo_check_lock_status(void)
 {
     if ( ( (test_data[2] & ((1<<28) | (1<<27) | (1<<26))) >> 26) == 0b110)
         plo_buff_push(HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin));
-    else
-        plo_lock_state = PLO_LOCK_STATE_UNKNOWN;
 }

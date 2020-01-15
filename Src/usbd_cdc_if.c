@@ -28,6 +28,7 @@
 #include "main.h"
 #include "stdio.h"
 #include "stdint.h"
+#include "stm32f0xx_it.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,7 +54,7 @@ uint8_t buffer[7];
 uint32_t test_data[6] = {DEF_TEST_DATA_REG0, DEF_TEST_DATA_REG1,
                          DEF_TEST_DATA_REG2, DEF_TEST_DATA_REG3,
                          DEF_TEST_DATA_REG4, DEF_TEST_DATA_REG5};
-host_com_port_open_closed_t host_com_port_open_closed;
+host_com_port_open_closed_t host_com_port_open_closed =  HOST_COM_PORT_CLOSED;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -274,7 +275,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
         }
         else
         {
-            apply_memory_select_changed();
+            memory_select_event = MEMORY_SELECT_CHANGED;
             host_com_port_open_closed = HOST_COM_PORT_CLOSED;
         }
     break;
@@ -497,7 +498,11 @@ uint32_t usb_process_command(char *command_data)
             uint32_t new_data = hex2int(value);
             // save register into test_data variable
             if ((new_data & 0x07) == 0x00)
+            {
                 test_data[0] = new_data;
+                if ( ( (test_data[2] & ((1<<28) | (1<<27) | (1<<26))) >> 26) != 0b110)
+                    plo_lock_state = PLO_LOCK_STATE_UNKNOWN;
+            }
             else if ((new_data & 0x07) == 0x01)
                 test_data[1] = new_data;
             else if ((new_data & 0x07) == 0x02)
@@ -588,27 +593,24 @@ void procesing_command_data()
         if (++active_buff >= CMD_BUFFER_CNT)        // Switch to next buffer
             active_buff = 0;
     }
+
+    if (plo_lock_state == PLO_LOCK_STATE_UNKNOWN)
+    {
+        printf("plo state is not known\r");
+        plo_lock_state = PLO_LOCK_STATE_WAIT;
+    }
 }
 
 void process_lock_status(bool data)
 {
-    if (plo_lock_state != PLO_LOCK_STATE_UNKNOWN)
-    {
-        if (data)
-        {   
-            printf("plo locked\r");
-        }
-        else
-        {
-            printf("plo isn't locked\r");
-        }
+    if (data)
+    {   
+        printf("plo locked\r");
     }
     else
     {
-        printf("plo state is not known\r");
+        printf("plo isn't locked\r");
     }
-    plo_lock_state = PLO_LOCK_STATE_WAIT;
-
 }
 
 void flash_send_stored_data(void)

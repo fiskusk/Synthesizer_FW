@@ -20,7 +20,6 @@ typedef enum{
 }plo_new_data_t;
 
 typedef enum{
-    PLO_LOCK_STATE_CHANGED,
     PLO_LOCK_STATE_UNKNOWN,
     PLO_LOCK_STATE_WAIT
 }plo_lock_state_t;
@@ -31,6 +30,6 @@ extern volatile plo_new_data_t plo_new_data;
 extern void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type);
 extern void plo_write_register(uint32_t register_data);
 extern void plo_check_lock_status(void);
-extern bool plo_buff_pop(bool * out_data);
+extern bool plo_buff_pop(uint8_t * out_data);
 
 #endif

@@ -72,13 +72,11 @@ void running_routine(void)
     {
         PLO_MODULE_OUT2_ON; // TODO for test purpose only
         
-        bool *data;
-        bool is_data = plo_buff_pop(data);
+        uint8_t data;
 
-        while ((plo_lock_state != PLO_LOCK_STATE_WAIT) || is_data )
+        while (plo_buff_pop(&data))
         {
-            process_lock_status(data);
-            is_data = plo_buff_pop(data);
+            process_lock_status((bool) data);
         }
 
         procesing_command_data();

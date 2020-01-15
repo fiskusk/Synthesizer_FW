@@ -38,15 +38,7 @@ typedef enum{
     MEMORY_SELECT_IDLE
 }memory_select_event_t;
 
-typedef enum{
-    MEMORY_1_SELECTED,
-    MEMORY_2_SELECTED,
-    MEMORY_3_SELECTED,
-    MEMORY_4_SELECTED
-}memory_select_state_t;
-
 extern volatile memory_select_event_t memory_select_event;
-extern volatile memory_select_state_t memory_select_state;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

@@ -48,14 +48,12 @@ extern __attribute__((__section__(".user_data"))) uint32_t saved_data_4[7];
 #define DEF_MEMORY4_REG6 "1"
 
 extern void myFLASH_PageErase(uint32_t address);
-extern void write_complete_data_to_flash(uint8_t possition, char *val0, 
-                                         char *val1, char *val2, char *val3, 
+extern void write_complete_data_to_flash(uint8_t possition, char *val0,
+                                         char *val1, char *val2, char *val3,
                                          char *val4, char *val5, char *val6);
 extern void flash_send_stored_data(void);
 extern void apply_memory_select_changed(void);
 extern void memory_select_init(void);
 extern void load_default_memory_register_values(void);
-
-
 
 #endif

@@ -36,8 +36,8 @@
 /* Private macro -------------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define CMD_BUFFER_LEN        96        // Size of each buffer in bytes
-#define CMD_BUFFER_CNT        2        // Total count of buffer
+#define CMD_BUFFER_LEN  96 // Size of each buffer in bytes
+#define CMD_BUFFER_CNT  2  // Total count of buffer
 
 typedef struct
 {
@@ -46,7 +46,6 @@ typedef struct
     bool received;
 } cmd_buffer_t;
 
-
 /* Private variables ---------------------------------------------------------*/
 cmd_buffer_t cmd_buffer[CMD_BUFFER_CNT];
 
@@ -54,7 +53,7 @@ uint8_t buffer[7];
 uint32_t test_data[6] = {DEF_TEST_DATA_REG0, DEF_TEST_DATA_REG1,
                          DEF_TEST_DATA_REG2, DEF_TEST_DATA_REG3,
                          DEF_TEST_DATA_REG4, DEF_TEST_DATA_REG5};
-host_com_port_open_closed_t host_com_port_open_closed =  HOST_COM_PORT_CLOSED;
+host_com_port_open_closed_t host_com_port_open_closed = HOST_COM_PORT_CLOSED;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -87,8 +86,8 @@ host_com_port_open_closed_t host_com_port_open_closed =  HOST_COM_PORT_CLOSED;
 /* USER CODE BEGIN PRIVATE_DEFINES */
 /* Define size for the receive and transmit buffer over CDC */
 /* It's up to user to redefine and/or remove those define */
-#define APP_RX_DATA_SIZE    64
-#define APP_TX_DATA_SIZE    64
+#define APP_RX_DATA_SIZE 64
+#define APP_TX_DATA_SIZE 64
 /* USER CODE END PRIVATE_DEFINES */
 
 /**
@@ -122,7 +121,6 @@ uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
 
-
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -151,8 +149,8 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 
 static int8_t CDC_Init_FS(void);
 static int8_t CDC_DeInit_FS(void);
-static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length);
-static int8_t CDC_Receive_FS(uint8_t* pbuf, uint32_t *Len);
+static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length);
+static int8_t CDC_Receive_FS(uint8_t *pbuf, uint32_t *Len);
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
 static void usb_data_available(uint8_t c);
@@ -164,12 +162,11 @@ uint32_t usb_process_command(char *command_data);
   */
 
 USBD_CDC_ItfTypeDef USBD_Interface_fops_FS =
-{
-  CDC_Init_FS,
-  CDC_DeInit_FS,
-  CDC_Control_FS,
-  CDC_Receive_FS
-};
+    {
+        CDC_Init_FS,
+        CDC_DeInit_FS,
+        CDC_Control_FS,
+        CDC_Receive_FS};
 
 /* Private functions ---------------------------------------------------------*/
 /**
@@ -178,12 +175,12 @@ USBD_CDC_ItfTypeDef USBD_Interface_fops_FS =
   */
 static int8_t CDC_Init_FS(void)
 {
-  /* USER CODE BEGIN 3 */
-  /* Set Application Buffers */
-  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBufferFS, 0);
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
-  return (USBD_OK);
-  /* USER CODE END 3 */
+    /* USER CODE BEGIN 3 */
+    /* Set Application Buffers */
+    USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBufferFS, 0);
+    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
+    return (USBD_OK);
+    /* USER CODE END 3 */
 }
 
 /**
@@ -192,9 +189,9 @@ static int8_t CDC_Init_FS(void)
   */
 static int8_t CDC_DeInit_FS(void)
 {
-  /* USER CODE BEGIN 4 */
-  return (USBD_OK);
-  /* USER CODE END 4 */
+    /* USER CODE BEGIN 4 */
+    return (USBD_OK);
+    /* USER CODE END 4 */
 }
 
 /**
@@ -204,49 +201,49 @@ static int8_t CDC_DeInit_FS(void)
   * @param  length: Number of data to be sent (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
+static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)
 {
-  /* USER CODE BEGIN 5 */
-  USBD_SetupReqTypedef * req;
-  switch(cmd)
-  {
+    /* USER CODE BEGIN 5 */
+    USBD_SetupReqTypedef *req;
+    switch (cmd)
+    {
     case CDC_SEND_ENCAPSULATED_COMMAND:
 
-    break;
+        break;
 
     case CDC_GET_ENCAPSULATED_RESPONSE:
 
-    break;
+        break;
 
     case CDC_SET_COMM_FEATURE:
 
-    break;
+        break;
 
     case CDC_GET_COMM_FEATURE:
 
-    break;
+        break;
 
     case CDC_CLEAR_COMM_FEATURE:
 
-    break;
+        break;
 
-  /*******************************************************************************/
-  /* Line Coding Structure                                                       */
-  /*-----------------------------------------------------------------------------*/
-  /* Offset | Field       | Size | Value  | Description                          */
-  /* 0      | dwDTERate   |   4  | Number |Data terminal rate, in bits per second*/
-  /* 4      | bCharFormat |   1  | Number | Stop bits                            */
-  /*                                        0 - 1 Stop bit                       */
-  /*                                        1 - 1.5 Stop bits                    */
-  /*                                        2 - 2 Stop bits                      */
-  /* 5      | bParityType |  1   | Number | Parity                               */
-  /*                                        0 - None                             */
-  /*                                        1 - Odd                              */
-  /*                                        2 - Even                             */
-  /*                                        3 - Mark                             */
-  /*                                        4 - Space                            */
-  /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
-  /*******************************************************************************/
+        /*******************************************************************************/
+        /* Line Coding Structure                                                       */
+        /*-----------------------------------------------------------------------------*/
+        /* Offset | Field       | Size | Value  | Description                          */
+        /* 0      | dwDTERate   |   4  | Number |Data terminal rate, in bits per second*/
+        /* 4      | bCharFormat |   1  | Number | Stop bits                            */
+        /*                                        0 - 1 Stop bit                       */
+        /*                                        1 - 1.5 Stop bits                    */
+        /*                                        2 - 2 Stop bits                      */
+        /* 5      | bParityType |  1   | Number | Parity                               */
+        /*                                        0 - None                             */
+        /*                                        1 - Odd                              */
+        /*                                        2 - Even                             */
+        /*                                        3 - Mark                             */
+        /*                                        4 - Space                            */
+        /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
+        /*******************************************************************************/
     case CDC_SET_LINE_CODING:
         buffer[0] = pbuf[0];
         buffer[1] = pbuf[1];
@@ -255,7 +252,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
         buffer[4] = pbuf[4];
         buffer[5] = pbuf[5];
         buffer[6] = pbuf[6];
-    break;
+        break;
 
     case CDC_GET_LINE_CODING:
         pbuf[0] = buffer[0];
@@ -265,11 +262,11 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
         pbuf[4] = buffer[4];
         pbuf[5] = buffer[5];
         pbuf[6] = buffer[6];
-    break;
+        break;
 
     case CDC_SET_CONTROL_LINE_STATE:
         req = (USBD_SetupReqTypedef *)pbuf;
-        if((req->wValue & 0x0001) != 0)
+        if ((req->wValue & 0x0001) != 0)
         {
             host_com_port_open_closed = HOST_COM_PORT_OPEN;
         }
@@ -278,18 +275,18 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
             memory_select_event = MEMORY_SELECT_CHANGED;
             host_com_port_open_closed = HOST_COM_PORT_CLOSED;
         }
-    break;
+        break;
 
     case CDC_SEND_BREAK:
 
-    break;
+        break;
 
-  default:
-    break;
-  }
+    default:
+        break;
+    }
 
-  return (USBD_OK);
-  /* USER CODE END 5 */
+    return (USBD_OK);
+    /* USER CODE END 5 */
 }
 
 /**
@@ -306,10 +303,10 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   * @param  Len: Number of data received (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
+static int8_t CDC_Receive_FS(uint8_t *Buf, uint32_t *Len)
 {
-  /* USER CODE BEGIN 6 */
-    
+    /* USER CODE BEGIN 6 */
+
     for (uint8_t i = 0; i < *Len; i++)
     {
         usb_data_available(Buf[i]);
@@ -319,7 +316,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
     USBD_CDC_ReceivePacket(&hUsbDeviceFS);
 
     return (USBD_OK);
-  /* USER CODE END 6 */
+    /* USER CODE END 6 */
 }
 
 int _write(int file, char const *buf, int n)
@@ -352,9 +349,11 @@ int _write(int file, char const *buf, int n)
     //if(((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState==0){
     //    CDC_Transmit_FS((uint8_t*)(buf), n);
     //}
-    
-    while (((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState != 0){}
-    CDC_Transmit_FS((uint8_t*)(buf), n);
+
+    while (((USBD_CDC_HandleTypeDef *)(hUsbDeviceFS.pClassData))->TxState != 0)
+    {
+    }
+    CDC_Transmit_FS((uint8_t *)(buf), n);
     return n;
 }
 
@@ -369,22 +368,22 @@ int _write(int file, char const *buf, int n)
   * @param  Len: Number of data to be sent (in bytes)
   * @retval USBD_OK if all operations are OK else USBD_FAIL or USBD_BUSY
   */
-uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
+uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len)
 {
-  uint8_t result = USBD_OK;
-  /* USER CODE BEGIN 7 */
-  //uint64_t counter = 0;
-  //USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
-  //if (hcdc->TxState != 0){
-  //  return USBD_BUSY;
-  //}
-  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
-  result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
-  //while (hcdc->TxState != 0){
-  //  counter++;
-  //}
-  /* USER CODE END 7 */
-  return result;
+    uint8_t result = USBD_OK;
+    /* USER CODE BEGIN 7 */
+    //uint64_t counter = 0;
+    //USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+    //if (hcdc->TxState != 0){
+    //  return USBD_BUSY;
+    //}
+    USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
+    result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
+    //while (hcdc->TxState != 0){
+    //  counter++;
+    //}
+    /* USER CODE END 7 */
+    return result;
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
@@ -397,27 +396,26 @@ static void usb_data_available(uint8_t c)
     uint8_t *pos = &cmd_buffer[active_buff].length;
 
     if (cmd_buffer[active_buff].received)
-        return;                                         // Buffer not free, cannot receive data...
+        return; // Buffer not free, cannot receive data...
 
     if (c == '\n' || c == '\r')
     {
-        cmd_buffer[active_buff].buffer[*pos] = 0;       // Add ending zero
-        cmd_buffer[active_buff].received = 1;           // Mark data in buffer as received
-        if (++active_buff >= CMD_BUFFER_CNT)            // Switch to next buffer
+        cmd_buffer[active_buff].buffer[*pos] = 0; // Add ending zero
+        cmd_buffer[active_buff].received = 1;     // Mark data in buffer as received
+        if (++active_buff >= CMD_BUFFER_CNT)      // Switch to next buffer
             active_buff = 0;
-
     }
     else
     {
-        if (*pos < (CMD_BUFFER_LEN - 1))                // 1 Byte on the end is reserved for zero
+        if (*pos < (CMD_BUFFER_LEN - 1)) // 1 Byte on the end is reserved for zero
         {
-            cmd_buffer[active_buff].buffer[*pos] = c;   // Save character to buffer
+            cmd_buffer[active_buff].buffer[*pos] = c; // Save character to buffer
             *pos = *pos + 1;
         }
         else
         {
             //TODO: No more space in buffer, cannot store data. What to do with it?
-            *pos = *pos;          // Useless, just for filling in the "else" branch
+            *pos = *pos; // Useless, just for filling in the "else" branch
         }
     }
 }
@@ -445,42 +443,46 @@ uint32_t usb_process_command(char *command_data)
     if (strcasecmp(token, "ref") == 0)
     {
         value = strtok(NULL, " ");
-        if (strcasecmp(value, "ext") == 0) {
+        if (strcasecmp(value, "ext") == 0)
+        {
             PLO_MODULE_EXT_REF;
         }
 
-        else if (strcasecmp(value, "int") == 0) {
+        else if (strcasecmp(value, "int") == 0)
+        {
             PLO_MODULE_INT_REF;
         }
         printf("OK\r");
-        plo_new_data=PLO_DATA_SENDED;
+        plo_new_data = PLO_DATA_SENDED;
     }
 
     else if (strcasecmp(token, "out") == 0)
     {
         sub_token = strtok(NULL, " ");
         value = strtok(NULL, " ");
-        if (strcasecmp(sub_token, "1") == 0) {
+        if (strcasecmp(sub_token, "1") == 0)
+        {
             if (strcasecmp(value, "on") == 0)
                 PLO_MODULE_OUT1_ON;
             else if (strcasecmp(value, "off") == 0)
                 PLO_MODULE_OUT1_OFF;
         }
-        else if (strcasecmp(sub_token, "2") == 0) {
+        else if (strcasecmp(sub_token, "2") == 0)
+        {
             if (strcasecmp(value, "on") == 0)
                 PLO_MODULE_OUT2_ON;
             else if (strcasecmp(value, "off") == 0)
                 PLO_MODULE_OUT2_OFF;
         }
         printf("OK\r");
-        plo_new_data=PLO_DATA_SENDED;
+        plo_new_data = PLO_DATA_SENDED;
     }
-    
+
     else if (strcasecmp(token, "plo") == 0)
     {
         sub_token = strtok(NULL, " ");
         value = strtok(NULL, " ");
-        value0 =strtok(NULL, " ");
+        value0 = strtok(NULL, " ");
         value1 = strtok(NULL, " ");
         value2 = strtok(NULL, " ");
         value3 = strtok(NULL, " ");
@@ -500,7 +502,7 @@ uint32_t usb_process_command(char *command_data)
             if ((new_data & 0x07) == 0x00)
             {
                 test_data[0] = new_data;
-                if ( ( (test_data[2] & ((1<<28) | (1<<27) | (1<<26))) >> 26) != 0b110)
+                if (((test_data[2] & ((1 << 28) | (1 << 27) | (1 << 26))) >> 26) != 0b110)
                     plo_lock_state = PLO_LOCK_STATE_UNKNOWN;
             }
             else if ((new_data & 0x07) == 0x01)
@@ -542,19 +544,19 @@ uint32_t usb_process_command(char *command_data)
                 write_complete_data_to_flash(4, value0, value1, value2, value3, value4, value5, value6);
             }
             printf("OK\r");
-            plo_new_data=PLO_DATA_SENDED;
+            plo_new_data = PLO_DATA_SENDED;
         }
         else if (strcasecmp(sub_token, "locked?") == 0)
         {
             plo_check_lock_status();
             printf("OK\r");
-            plo_new_data=PLO_DATA_SENDED;
+            plo_new_data = PLO_DATA_SENDED;
         }
         else if (strcasecmp(sub_token, "storedData") == 0)
         {
             printf("OK\r");
             flash_send_stored_data();
-            plo_new_data=PLO_DATA_SENDED;
+            plo_new_data = PLO_DATA_SENDED;
         }
     }
     return 0;
@@ -564,33 +566,26 @@ void procesing_command_data()
 {
     static uint8_t active_buff = 0;
 
-    while (cmd_buffer[active_buff].received)        // Check if data in buffer was received
+    while (cmd_buffer[active_buff].received) // Check if data in buffer was received
     {
-        uint32_t new_register_value = usb_process_command(cmd_buffer[active_buff].buffer);        // Process command
+        uint32_t new_register_value = usb_process_command(cmd_buffer[active_buff].buffer); // Process command
         if (plo_new_data == PLO_INIT)
         {
-            // toggle pin for trigger logic analyzer
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
-            plo_write_all(test_data, PLO_INIT);
-            plo_write_all(test_data, PLO_INIT);
-            plo_write_all(test_data, PLO_OUT_ENABLE);
+            plo_write(test_data, plo_new_data);
             printf("OK\r");
-            plo_new_data=PLO_DATA_SENDED;
+            plo_new_data = PLO_DATA_SENDED;
         }
         else if (plo_new_data == PLO_CHANGED_REGISTER)
         {
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET);
             plo_write_register(new_register_value);
             printf("OK\r");
-            plo_new_data=PLO_DATA_SENDED;
+            plo_new_data = PLO_DATA_SENDED;
         }
 
-        cmd_buffer[active_buff].length = 0;            // Data in buffer processed, clear the length and
-        cmd_buffer[active_buff].received = 0;        // mark it as free
+        cmd_buffer[active_buff].length = 0;   // Data in buffer processed, clear the length and
+        cmd_buffer[active_buff].received = 0; // mark it as free
 
-        if (++active_buff >= CMD_BUFFER_CNT)        // Switch to next buffer
+        if (++active_buff >= CMD_BUFFER_CNT) // Switch to next buffer
             active_buff = 0;
     }
 
@@ -601,10 +596,20 @@ void procesing_command_data()
     }
 }
 
+void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type)
+{
+    if (plo_new_data_type == PLO_INIT)
+    {
+        plo_write_all(data, PLO_INIT);
+        plo_write_all(data, PLO_INIT);
+        plo_write_all(data, PLO_OUT_ENABLE);
+    }
+}
+
 void process_lock_status(bool data)
 {
     if (data)
-    {   
+    {
         printf("plo locked\r");
     }
     else
@@ -615,26 +620,26 @@ void process_lock_status(bool data)
 
 void flash_send_stored_data(void)
 {
-    printf( "stored_data_1 %08x %08x %08x %08x %08x %08x %08x\r", 
-        (unsigned int)(saved_data_1[0]), (unsigned int)(saved_data_1[1]),
-        (unsigned int)(saved_data_1[2]), (unsigned int)(saved_data_1[3]), 
-        (unsigned int)(saved_data_1[4]), (unsigned int)(saved_data_1[5]),
-        (unsigned int)(saved_data_1[6]));
-    printf("stored_data_2 %08x %08x %08x %08x %08x %08x %08x\r", 
-        (unsigned int)(saved_data_2[0]), (unsigned int)(saved_data_2[1]),
-        (unsigned int)(saved_data_2[2]), (unsigned int)(saved_data_2[3]),
-        (unsigned int)(saved_data_2[4]), (unsigned int)(saved_data_2[5]),
-        (unsigned int)(saved_data_2[6]));
-    printf("stored_data_3 %08x %08x %08x %08x %08x %08x %08x\r", 
-        (unsigned int)(saved_data_3[0]), (unsigned int)(saved_data_3[1]),
-        (unsigned int)(saved_data_3[2]), (unsigned int)(saved_data_3[3]),
-        (unsigned int)(saved_data_3[4]), (unsigned int)(saved_data_3[5]),
-        (unsigned int)(saved_data_3[6]));
+    printf("stored_data_1 %08x %08x %08x %08x %08x %08x %08x\r",
+           (unsigned int)(saved_data_1[0]), (unsigned int)(saved_data_1[1]),
+           (unsigned int)(saved_data_1[2]), (unsigned int)(saved_data_1[3]),
+           (unsigned int)(saved_data_1[4]), (unsigned int)(saved_data_1[5]),
+           (unsigned int)(saved_data_1[6]));
+    printf("stored_data_2 %08x %08x %08x %08x %08x %08x %08x\r",
+           (unsigned int)(saved_data_2[0]), (unsigned int)(saved_data_2[1]),
+           (unsigned int)(saved_data_2[2]), (unsigned int)(saved_data_2[3]),
+           (unsigned int)(saved_data_2[4]), (unsigned int)(saved_data_2[5]),
+           (unsigned int)(saved_data_2[6]));
+    printf("stored_data_3 %08x %08x %08x %08x %08x %08x %08x\r",
+           (unsigned int)(saved_data_3[0]), (unsigned int)(saved_data_3[1]),
+           (unsigned int)(saved_data_3[2]), (unsigned int)(saved_data_3[3]),
+           (unsigned int)(saved_data_3[4]), (unsigned int)(saved_data_3[5]),
+           (unsigned int)(saved_data_3[6]));
     printf("stored_data_4 %08x %08x %08x %08x %08x %08x %08x\r",
-        (unsigned int)(saved_data_4[0]), (unsigned int)(saved_data_4[1]),
-        (unsigned int)(saved_data_4[2]), (unsigned int)(saved_data_4[3]),
-        (unsigned int)(saved_data_4[4]), (unsigned int)(saved_data_4[5]),
-        (unsigned int)(saved_data_4[6]));
+           (unsigned int)(saved_data_4[0]), (unsigned int)(saved_data_4[1]),
+           (unsigned int)(saved_data_4[2]), (unsigned int)(saved_data_4[3]),
+           (unsigned int)(saved_data_4[4]), (unsigned int)(saved_data_4[5]),
+           (unsigned int)(saved_data_4[6]));
 }
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 

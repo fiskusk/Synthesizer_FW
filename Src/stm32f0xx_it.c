@@ -45,7 +45,6 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 volatile memory_select_event_t memory_select_event = MEMORY_SELECT_WAIT;
-volatile memory_select_state_t memory_select_state;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

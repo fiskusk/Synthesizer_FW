@@ -21,23 +21,23 @@ __attribute__((__section__(".user_data"))) uint32_t saved_data_4[7];
 
 void change_plo_module_states(uint32_t control_register)
 {
-    (control_register & (1<<0)) ? PLO_MODULE_OUT1_ON : PLO_MODULE_OUT1_OFF;
-    ((control_register & (1<<1)) >> 1) ? PLO_MODULE_OUT2_ON : PLO_MODULE_OUT2_OFF;
-    ((control_register & (1<<2)) >> 2) ? PLO_MODULE_EXT_REF : PLO_MODULE_INT_REF;
+    (control_register & (1 << 0)) ? PLO_MODULE_OUT1_ON : PLO_MODULE_OUT1_OFF;
+    ((control_register & (1 << 1)) >> 1) ? PLO_MODULE_OUT2_ON : PLO_MODULE_OUT2_OFF;
+    ((control_register & (1 << 2)) >> 2) ? PLO_MODULE_EXT_REF : PLO_MODULE_INT_REF;
 }
 
 void myFLASH_PageErase(uint32_t address)
 {
     HAL_FLASH_Unlock();
-    FLASH->CR |= FLASH_CR_PER; /* (1) */
-    FLASH->AR = address; /* (2) */
-    FLASH->CR |= FLASH_CR_STRT; /* (3) */
-    while ((FLASH->SR & FLASH_SR_BSY) != 0) /* (4) */
-    if ((FLASH->SR & FLASH_SR_EOP) != 0) /* (5) */
+    FLASH->CR |= FLASH_CR_PER;                  /* (1) */
+    FLASH->AR = address;                        /* (2) */
+    FLASH->CR |= FLASH_CR_STRT;                 /* (3) */
+    while ((FLASH->SR & FLASH_SR_BSY) != 0)     /* (4) */
+    if ((FLASH->SR & FLASH_SR_EOP) != 0)        /* (5) */
     {
-        FLASH->SR |= FLASH_SR_EOP; /* (6)*/
+        FLASH->SR |= FLASH_SR_EOP;              /* (6)*/
     }
-    FLASH->CR &= ~FLASH_CR_PER; /* (7) */
+    FLASH->CR &= ~FLASH_CR_PER;                 /* (7) */
     HAL_FLASH_Lock();
 }
 
@@ -47,24 +47,24 @@ void write_data_to_flash(uint8_t position, uint32_t index, uint32_t data)
 
     switch (position)
     {
-        case 1:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_1[index]), data);
-            break;
-        case 2:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_2[index]), data);
-            break;
-        case 3:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_3[index]), data);
-            break;
-        case 4:
-            HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_4[index]), data);
-            break;
+    case 1:
+        HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_1[index]), data);
+        break;
+    case 2:
+        HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_2[index]), data);
+        break;
+    case 3:
+        HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_3[index]), data);
+        break;
+    case 4:
+        HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_4[index]), data);
+        break;
     }
     HAL_FLASH_Lock();
 }
 
-void write_complete_data_to_flash(uint8_t possition, char *val0, 
-                                  char *val1, char *val2, char *val3, 
+void write_complete_data_to_flash(uint8_t possition, char *val0,
+                                  char *val1, char *val2, char *val3,
                                   char *val4, char *val5, char *val6)
 {
     write_data_to_flash(possition, 0, hex2int(val0));
@@ -80,8 +80,8 @@ uint8_t get_selected_memory_from_jumper(void)
 {
     volatile uint8_t bit0 = HAL_GPIO_ReadPin(JP2_GPIO_Port, JP2_Pin);
     volatile uint8_t bit1 = HAL_GPIO_ReadPin(JP1_GPIO_Port, JP1_Pin);
-    bit0 = (1<<0) & ~bit0;
-    bit1 = (1<<0) & ~bit1;
+    bit0 = (1 << 0) & ~bit0;
+    bit1 = (1 << 0) & ~bit1;
     return bit0 | (bit1 << 1);
 }
 
@@ -90,41 +90,26 @@ void memory_select_init(void)
     uint8_t jp_selected_bits = get_selected_memory_from_jumper();
     switch (jp_selected_bits)
     {
-        case 0:
-            memory_select_state = MEMORY_1_SELECTED;
-            plo_write_all(saved_data_1, PLO_INIT);
-            plo_write_all(saved_data_1, PLO_INIT);
-            plo_write_all(saved_data_1, PLO_OUT_ENABLE);
-            change_plo_module_states(saved_data_1[6]);
-            break;
-        case 1:
-            memory_select_state = MEMORY_2_SELECTED;
-            plo_write_all(saved_data_2, PLO_INIT);
-            plo_write_all(saved_data_2, PLO_INIT);
-            plo_write_all(saved_data_2, PLO_OUT_ENABLE);
-            change_plo_module_states(saved_data_2[6]);
-            break;
-        case 2:
-            memory_select_state = MEMORY_3_SELECTED;
-            plo_write_all(saved_data_3, PLO_INIT);
-            plo_write_all(saved_data_3, PLO_INIT);
-            plo_write_all(saved_data_3, PLO_OUT_ENABLE);
-            change_plo_module_states(saved_data_3[6]);
-            break;
-        case 3:
-            memory_select_state = MEMORY_4_SELECTED;
-            plo_write_all(saved_data_4, PLO_INIT);
-            plo_write_all(saved_data_4, PLO_INIT);
-            plo_write_all(saved_data_4, PLO_OUT_ENABLE);
-            change_plo_module_states(saved_data_4[6]);
-            break;
-        default:
-            memory_select_state = MEMORY_1_SELECTED;
-            plo_write_all(saved_data_1, PLO_INIT);
-            plo_write_all(saved_data_1, PLO_INIT);
-            plo_write_all(saved_data_1, PLO_OUT_ENABLE);
-            change_plo_module_states(saved_data_1[6]);
-            break;
+    case 0:
+        plo_write(saved_data_1, PLO_INIT);
+        change_plo_module_states(saved_data_1[6]);
+        break;
+    case 1:
+        plo_write(saved_data_2, PLO_INIT);
+        change_plo_module_states(saved_data_2[6]);
+        break;
+    case 2:
+        plo_write(saved_data_3, PLO_INIT);
+        change_plo_module_states(saved_data_3[6]);
+        break;
+    case 3:
+        plo_write(saved_data_4, PLO_INIT);
+        change_plo_module_states(saved_data_4[6]);
+        break;
+    default:
+        plo_write(saved_data_1, PLO_INIT);
+        change_plo_module_states(saved_data_1[6]);
+        break;
     }
 }
 
@@ -135,31 +120,26 @@ void apply_memory_select_changed(void)
         uint8_t jp_selected_bits = get_selected_memory_from_jumper();
         switch (jp_selected_bits)
         {
-            case 0:
-                memory_select_state = MEMORY_1_SELECTED;
-                plo_write_all(saved_data_1, PLO_NEW_DATA);
-                change_plo_module_states(saved_data_1[6]);
-                break;
-            case 1:
-                memory_select_state = MEMORY_2_SELECTED;
-                plo_write_all(saved_data_2, PLO_NEW_DATA);
-                change_plo_module_states(saved_data_2[6]);
-                break;
-            case 2:
-                memory_select_state = MEMORY_3_SELECTED;
-                plo_write_all(saved_data_3, PLO_NEW_DATA);
-                change_plo_module_states(saved_data_3[6]);
-                break;
-            case 3:
-                memory_select_state = MEMORY_4_SELECTED;
-                plo_write_all(saved_data_4, PLO_NEW_DATA);
-                change_plo_module_states(saved_data_4[6]);
-                break;
-            default:
-                memory_select_state = MEMORY_1_SELECTED;
-                plo_write_all(saved_data_1, PLO_NEW_DATA);
-                change_plo_module_states(saved_data_1[6]);
-                break;
+        case 0:
+            plo_write_all(saved_data_1, PLO_NEW_DATA);
+            change_plo_module_states(saved_data_1[6]);
+            break;
+        case 1:
+            plo_write_all(saved_data_2, PLO_NEW_DATA);
+            change_plo_module_states(saved_data_2[6]);
+            break;
+        case 2:
+            plo_write_all(saved_data_3, PLO_NEW_DATA);
+            change_plo_module_states(saved_data_3[6]);
+            break;
+        case 3:
+            plo_write_all(saved_data_4, PLO_NEW_DATA);
+            change_plo_module_states(saved_data_4[6]);
+            break;
+        default:
+            plo_write_all(saved_data_1, PLO_NEW_DATA);
+            change_plo_module_states(saved_data_1[6]);
+            break;
         }
         memory_select_event = MEMORY_SELECT_WAIT;
     }
@@ -169,19 +149,19 @@ void load_default_memory_register_values(void)
 {
     myFLASH_PageErase(0x08007800);
     write_complete_data_to_flash(1, DEF_MEMORY1_REG0, DEF_MEMORY1_REG1,
-                                    DEF_MEMORY1_REG2, DEF_MEMORY1_REG3,
-                                    DEF_MEMORY1_REG4, DEF_MEMORY1_REG5,
-                                    DEF_MEMORY1_REG6);
+                                 DEF_MEMORY1_REG2, DEF_MEMORY1_REG3,
+                                 DEF_MEMORY1_REG4, DEF_MEMORY1_REG5,
+                                 DEF_MEMORY1_REG6);
     write_complete_data_to_flash(2, DEF_MEMORY2_REG0, DEF_MEMORY2_REG1,
-                                    DEF_MEMORY2_REG2, DEF_MEMORY2_REG3,
-                                    DEF_MEMORY2_REG4, DEF_MEMORY2_REG5,
-                                    DEF_MEMORY2_REG6);
+                                 DEF_MEMORY2_REG2, DEF_MEMORY2_REG3,
+                                 DEF_MEMORY2_REG4, DEF_MEMORY2_REG5,
+                                 DEF_MEMORY2_REG6);
     write_complete_data_to_flash(3, DEF_MEMORY3_REG0, DEF_MEMORY3_REG1,
-                                    DEF_MEMORY3_REG2, DEF_MEMORY3_REG3,
-                                    DEF_MEMORY3_REG4, DEF_MEMORY3_REG5,
-                                    DEF_MEMORY3_REG6);
+                                 DEF_MEMORY3_REG2, DEF_MEMORY3_REG3,
+                                 DEF_MEMORY3_REG4, DEF_MEMORY3_REG5,
+                                 DEF_MEMORY3_REG6);
     write_complete_data_to_flash(4, DEF_MEMORY4_REG0, DEF_MEMORY4_REG1,
-                                    DEF_MEMORY4_REG2, DEF_MEMORY4_REG3,
-                                    DEF_MEMORY4_REG4, DEF_MEMORY4_REG5,
-                                    DEF_MEMORY4_REG6);
+                                 DEF_MEMORY4_REG2, DEF_MEMORY4_REG3,
+                                 DEF_MEMORY4_REG4, DEF_MEMORY4_REG5,
+                                 DEF_MEMORY4_REG6);
 }

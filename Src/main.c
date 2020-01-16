@@ -29,6 +29,7 @@
 #include "max2871.h"
 #include "flash.h"
 #include "timer.h"
+#include "usb.h"
 #include "usbd_cdc_if.h"
 #include "stm32f0xx_hal.h"
 #include "stm32f0xx_it.h"
@@ -75,10 +76,10 @@ void running_routine(void)
 
         while (plo_buff_pop(&data))
         {
-            process_lock_status((bool)data);
+            plo_process_lock_status((bool)data);
         }
 
-        procesing_command_data();
+        usb_procesing_command_data();
     }
     else
     {
@@ -143,7 +144,6 @@ int main(void)
     while (1)
     {
         /* USER CODE END WHILE */
-
         /* USER CODE BEGIN 3 */
         running_routine();
     }

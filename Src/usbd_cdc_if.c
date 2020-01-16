@@ -23,12 +23,8 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-#include "max2871.h"
-#include "flash.h"
-#include "main.h"
-#include "stdio.h"
-#include "stdint.h"
 #include "stm32f0xx_it.h"
+#include "usb.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,24 +32,12 @@
 /* Private macro -------------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define CMD_BUFFER_LEN  96 // Size of each buffer in bytes
-#define CMD_BUFFER_CNT  2  // Total count of buffer
 
-typedef struct
-{
-    uint8_t length;
-    char buffer[CMD_BUFFER_LEN];
-    bool received;
-} cmd_buffer_t;
 
 /* Private variables ---------------------------------------------------------*/
-cmd_buffer_t cmd_buffer[CMD_BUFFER_CNT];
-
-uint8_t buffer[7];
-uint32_t test_data[6] = {DEF_TEST_DATA_REG0, DEF_TEST_DATA_REG1,
-                         DEF_TEST_DATA_REG2, DEF_TEST_DATA_REG3,
-                         DEF_TEST_DATA_REG4, DEF_TEST_DATA_REG5};
 host_com_port_open_closed_t host_com_port_open_closed = HOST_COM_PORT_CLOSED;
+uint8_t buffer[7];
+
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -153,8 +137,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length);
 static int8_t CDC_Receive_FS(uint8_t *pbuf, uint32_t *Len);
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
-static void usb_data_available(uint8_t c);
-uint32_t usb_process_command(char *command_data);
+
 /* USER CODE END PRIVATE_FUNCTIONS_DECLARATION */
 
 /**
@@ -319,44 +302,6 @@ static int8_t CDC_Receive_FS(uint8_t *Buf, uint32_t *Len)
     /* USER CODE END 6 */
 }
 
-int _write(int file, char const *buf, int n)
-{
-    /* stdout redirection to USB */
-    /*
-    uint8_t sent    = 0;
-    uint8_t try_cnt = 0;
-
-    while(!sent)
-    {
-        if(((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState == 0)
-        {
-            if(CDC_Transmit_FS((uint8_t*)(buf), n) == USBD_OK)
-            {
-                sent = 1;
-            }
-        }
-        else if(try_cnt > 9)
-        {
-            sent = 1;
-        }
-
-        try_cnt++;
-        if(sent == 0)
-        {
-            HAL_Delay(1);
-        }
-    }*/
-    //if(((USBD_CDC_HandleTypeDef*)(hUsbDeviceFS.pClassData))->TxState==0){
-    //    CDC_Transmit_FS((uint8_t*)(buf), n);
-    //}
-
-    while (((USBD_CDC_HandleTypeDef *)(hUsbDeviceFS.pClassData))->TxState != 0)
-    {
-    }
-    CDC_Transmit_FS((uint8_t *)(buf), n);
-    return n;
-}
-
 /**
   * @brief  CDC_Transmit_FS
   *         Data to send over USB IN endpoint are sent over CDC interface
@@ -387,259 +332,14 @@ uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len)
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
-/****************************************************/
-/****************************************************/
-/****************************************************/
-static void usb_data_available(uint8_t c)
+int _write(int file, char const *buf, int n)
 {
-    static uint8_t active_buff = 0;
-    uint8_t *pos = &cmd_buffer[active_buff].length;
-
-    if (cmd_buffer[active_buff].received)
-        return; // Buffer not free, cannot receive data...
-
-    if (c == '\n' || c == '\r')
+    /* stdout redirection to USB */
+    while (((USBD_CDC_HandleTypeDef *)(hUsbDeviceFS.pClassData))->TxState != 0)
     {
-        cmd_buffer[active_buff].buffer[*pos] = 0; // Add ending zero
-        cmd_buffer[active_buff].received = 1;     // Mark data in buffer as received
-        if (++active_buff >= CMD_BUFFER_CNT)      // Switch to next buffer
-            active_buff = 0;
     }
-    else
-    {
-        if (*pos < (CMD_BUFFER_LEN - 1)) // 1 Byte on the end is reserved for zero
-        {
-            cmd_buffer[active_buff].buffer[*pos] = c; // Save character to buffer
-            *pos = *pos + 1;
-        }
-        else
-        {
-            //TODO: No more space in buffer, cannot store data. What to do with it?
-            *pos = *pos; // Useless, just for filling in the "else" branch
-        }
-    }
-}
-
-uint32_t usb_process_command(char *command_data)
-{
-    char *token;
-    char *sub_token;
-    char *value;
-    char *value0;
-    char *value1;
-    char *value2;
-    char *value3;
-    char *value4;
-    char *value5;
-    char *value6;
-
-    for (uint8_t i = 0; i < strlen(command_data); i++)
-    {
-        command_data[i] = (command_data[i] < 32 || command_data[i] > 126) ? '\0' : command_data[i];
-    }
-
-    token = strtok(command_data, " ");
-
-    if (strcasecmp(token, "ref") == 0)
-    {
-        value = strtok(NULL, " ");
-        if (strcasecmp(value, "ext") == 0)
-        {
-            PLO_MODULE_EXT_REF;
-        }
-
-        else if (strcasecmp(value, "int") == 0)
-        {
-            PLO_MODULE_INT_REF;
-        }
-        printf("OK\r");
-        plo_new_data = PLO_DATA_SENDED;
-    }
-
-    else if (strcasecmp(token, "out") == 0)
-    {
-        sub_token = strtok(NULL, " ");
-        value = strtok(NULL, " ");
-        if (strcasecmp(sub_token, "1") == 0)
-        {
-            if (strcasecmp(value, "on") == 0)
-                PLO_MODULE_OUT1_ON;
-            else if (strcasecmp(value, "off") == 0)
-                PLO_MODULE_OUT1_OFF;
-        }
-        else if (strcasecmp(sub_token, "2") == 0)
-        {
-            if (strcasecmp(value, "on") == 0)
-                PLO_MODULE_OUT2_ON;
-            else if (strcasecmp(value, "off") == 0)
-                PLO_MODULE_OUT2_OFF;
-        }
-        printf("OK\r");
-        plo_new_data = PLO_DATA_SENDED;
-    }
-
-    else if (strcasecmp(token, "plo") == 0)
-    {
-        sub_token = strtok(NULL, " ");
-        value = strtok(NULL, " ");
-        value0 = strtok(NULL, " ");
-        value1 = strtok(NULL, " ");
-        value2 = strtok(NULL, " ");
-        value3 = strtok(NULL, " ");
-        value4 = strtok(NULL, " ");
-        value5 = strtok(NULL, " ");
-        value6 = strtok(NULL, " ");
-
-        if (strcasecmp(sub_token, "init") == 0)
-        {
-            plo_new_data = PLO_INIT;
-        }
-
-        else if (strcasecmp(sub_token, "set_register") == 0)
-        {
-            uint32_t new_data = hex2int(value);
-            // save register into test_data variable
-            if ((new_data & 0x07) == 0x00)
-            {
-                test_data[0] = new_data;
-                if (((test_data[2] & ((1 << 28) | (1 << 27) | (1 << 26))) >> 26) != 0b110)
-                    plo_lock_state = PLO_LOCK_STATE_UNKNOWN;
-            }
-            else if ((new_data & 0x07) == 0x01)
-                test_data[1] = new_data;
-            else if ((new_data & 0x07) == 0x02)
-                test_data[2] = new_data;
-            else if ((new_data & 0x07) == 0x03)
-                test_data[3] = new_data;
-            else if ((new_data & 0x07) == 0x04)
-                test_data[4] = new_data;
-            else if ((new_data & 0x07) == 0x05)
-                test_data[5] = new_data;
-
-            plo_new_data = PLO_CHANGED_REGISTER;
-
-            return new_data;
-        }
-
-        else if (strcasecmp(sub_token, "data") == 0)
-        {
-            if (strcasecmp(value, "clean") == 0)
-            {
-                myFLASH_PageErase(0x08007800);
-            }
-            else if (strcasecmp(value, "1") == 0)
-            {
-                write_complete_data_to_flash(1, value0, value1, value2, value3, value4, value5, value6);
-            }
-            else if (strcasecmp(value, "2") == 0)
-            {
-                write_complete_data_to_flash(2, value0, value1, value2, value3, value4, value5, value6);
-            }
-            else if (strcasecmp(value, "3") == 0)
-            {
-                write_complete_data_to_flash(3, value0, value1, value2, value3, value4, value5, value6);
-            }
-            else if (strcasecmp(value, "4") == 0)
-            {
-                write_complete_data_to_flash(4, value0, value1, value2, value3, value4, value5, value6);
-            }
-            printf("OK\r");
-            plo_new_data = PLO_DATA_SENDED;
-        }
-        else if (strcasecmp(sub_token, "locked?") == 0)
-        {
-            plo_check_lock_status();
-            printf("OK\r");
-            plo_new_data = PLO_DATA_SENDED;
-        }
-        else if (strcasecmp(sub_token, "storedData") == 0)
-        {
-            printf("OK\r");
-            flash_send_stored_data();
-            plo_new_data = PLO_DATA_SENDED;
-        }
-    }
-    return 0;
-}
-
-void procesing_command_data()
-{
-    static uint8_t active_buff = 0;
-
-    while (cmd_buffer[active_buff].received) // Check if data in buffer was received
-    {
-        uint32_t new_register_value = usb_process_command(cmd_buffer[active_buff].buffer); // Process command
-        if (plo_new_data == PLO_INIT)
-        {
-            plo_write(test_data, plo_new_data);
-            printf("OK\r");
-            plo_new_data = PLO_DATA_SENDED;
-        }
-        else if (plo_new_data == PLO_CHANGED_REGISTER)
-        {
-            plo_write_register(new_register_value);
-            printf("OK\r");
-            plo_new_data = PLO_DATA_SENDED;
-        }
-
-        cmd_buffer[active_buff].length = 0;   // Data in buffer processed, clear the length and
-        cmd_buffer[active_buff].received = 0; // mark it as free
-
-        if (++active_buff >= CMD_BUFFER_CNT) // Switch to next buffer
-            active_buff = 0;
-    }
-
-    if (plo_lock_state == PLO_LOCK_STATE_UNKNOWN)
-    {
-        printf("plo state is not known\r");
-        plo_lock_state = PLO_LOCK_STATE_WAIT;
-    }
-}
-
-void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type)
-{
-    if (plo_new_data_type == PLO_INIT)
-    {
-        plo_write_all(data, PLO_INIT);
-        plo_write_all(data, PLO_INIT);
-        plo_write_all(data, PLO_OUT_ENABLE);
-    }
-}
-
-void process_lock_status(bool data)
-{
-    if (data)
-    {
-        printf("plo locked\r");
-    }
-    else
-    {
-        printf("plo isn't locked\r");
-    }
-}
-
-void flash_send_stored_data(void)
-{
-    printf("stored_data_1 %08x %08x %08x %08x %08x %08x %08x\r",
-           (unsigned int)(saved_data_1[0]), (unsigned int)(saved_data_1[1]),
-           (unsigned int)(saved_data_1[2]), (unsigned int)(saved_data_1[3]),
-           (unsigned int)(saved_data_1[4]), (unsigned int)(saved_data_1[5]),
-           (unsigned int)(saved_data_1[6]));
-    printf("stored_data_2 %08x %08x %08x %08x %08x %08x %08x\r",
-           (unsigned int)(saved_data_2[0]), (unsigned int)(saved_data_2[1]),
-           (unsigned int)(saved_data_2[2]), (unsigned int)(saved_data_2[3]),
-           (unsigned int)(saved_data_2[4]), (unsigned int)(saved_data_2[5]),
-           (unsigned int)(saved_data_2[6]));
-    printf("stored_data_3 %08x %08x %08x %08x %08x %08x %08x\r",
-           (unsigned int)(saved_data_3[0]), (unsigned int)(saved_data_3[1]),
-           (unsigned int)(saved_data_3[2]), (unsigned int)(saved_data_3[3]),
-           (unsigned int)(saved_data_3[4]), (unsigned int)(saved_data_3[5]),
-           (unsigned int)(saved_data_3[6]));
-    printf("stored_data_4 %08x %08x %08x %08x %08x %08x %08x\r",
-           (unsigned int)(saved_data_4[0]), (unsigned int)(saved_data_4[1]),
-           (unsigned int)(saved_data_4[2]), (unsigned int)(saved_data_4[3]),
-           (unsigned int)(saved_data_4[4]), (unsigned int)(saved_data_4[5]),
-           (unsigned int)(saved_data_4[6]));
+    CDC_Transmit_FS((uint8_t *)(buf), n);
+    return n;
 }
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 

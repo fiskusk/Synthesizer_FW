@@ -31,5 +31,8 @@ extern void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type);
 extern void plo_write_register(uint32_t register_data);
 extern void plo_check_lock_status(void);
 extern bool plo_buff_pop(uint8_t * out_data);
+extern void plo_process_lock_status(bool data);
+extern void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type);
+
 
 #endif

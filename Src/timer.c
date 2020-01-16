@@ -13,7 +13,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         static uint8_t cnt = 0;
         if (cnt > 1)
         {
-            //check_lock_status();
             tick_handle = TICK_OCCUR;
             cnt = 0;
         }

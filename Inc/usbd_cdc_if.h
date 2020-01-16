@@ -31,7 +31,6 @@
 #include "usbd_cdc.h"
 
 /* USER CODE BEGIN INCLUDE */
-#include "max2871.h"
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -98,8 +97,6 @@ typedef enum{
 
 extern host_com_port_open_closed_t host_com_port_open_closed;
 
-extern uint32_t test_data[6];
-
 /* USER CODE END EXPORTED_VARIABLES */
 
 /**
@@ -114,11 +111,6 @@ extern uint32_t test_data[6];
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
-extern void check_lock_status(void);
-extern void procesing_command_data();
-extern uint32_t hex2int(char *hex);
-extern void process_lock_status(bool data);
-extern void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type);
 
 /* USER CODE END EXPORTED_FUNCTIONS */
 

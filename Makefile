@@ -45,6 +45,7 @@ Src/max2871.c \
 Src/flash.c \
 Src/timer.c \
 Src/format.c \
+Src/usb.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_ll_usb.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c \

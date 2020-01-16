@@ -165,3 +165,27 @@ void load_default_memory_register_values(void)
                                  DEF_MEMORY4_REG4, DEF_MEMORY4_REG5,
                                  DEF_MEMORY4_REG6);
 }
+
+void flash_send_stored_data(void)
+{
+    printf("stored_data_1 %08x %08x %08x %08x %08x %08x %08x\r",
+           (unsigned int)(saved_data_1[0]), (unsigned int)(saved_data_1[1]),
+           (unsigned int)(saved_data_1[2]), (unsigned int)(saved_data_1[3]),
+           (unsigned int)(saved_data_1[4]), (unsigned int)(saved_data_1[5]),
+           (unsigned int)(saved_data_1[6]));
+    printf("stored_data_2 %08x %08x %08x %08x %08x %08x %08x\r",
+           (unsigned int)(saved_data_2[0]), (unsigned int)(saved_data_2[1]),
+           (unsigned int)(saved_data_2[2]), (unsigned int)(saved_data_2[3]),
+           (unsigned int)(saved_data_2[4]), (unsigned int)(saved_data_2[5]),
+           (unsigned int)(saved_data_2[6]));
+    printf("stored_data_3 %08x %08x %08x %08x %08x %08x %08x\r",
+           (unsigned int)(saved_data_3[0]), (unsigned int)(saved_data_3[1]),
+           (unsigned int)(saved_data_3[2]), (unsigned int)(saved_data_3[3]),
+           (unsigned int)(saved_data_3[4]), (unsigned int)(saved_data_3[5]),
+           (unsigned int)(saved_data_3[6]));
+    printf("stored_data_4 %08x %08x %08x %08x %08x %08x %08x\r",
+           (unsigned int)(saved_data_4[0]), (unsigned int)(saved_data_4[1]),
+           (unsigned int)(saved_data_4[2]), (unsigned int)(saved_data_4[3]),
+           (unsigned int)(saved_data_4[4]), (unsigned int)(saved_data_4[5]),
+           (unsigned int)(saved_data_4[6]));
+}

@@ -85,17 +85,21 @@ void running_routine(void)
     {
         PLO_MODULE_OUT2_OFF; // TODO for test purpose only
         if (memory_select_event == MEMORY_SELECT_CHANGED)
-            apply_memory_select_changed();
+            apply_memory_select_changed(PLO_NEW_DATA);
     }
 }
 
+/**
+ * @brief This function run after startup and if saved data isn't write to data
+ *        memory, loaded them into memory. After that 
+ */
 void init_routine(void)
 {
     if (saved_data_1[0] == 0x0)
     {
         load_default_memory_register_values();
     }
-    memory_select_init();
+    apply_memory_select_changed(PLO_INIT);
 }
 
 /* USER CODE END 0 */

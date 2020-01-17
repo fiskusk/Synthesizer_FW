@@ -85,59 +85,31 @@ uint8_t get_selected_memory_from_jumper(void)
     return bit0 | (bit1 << 1);
 }
 
-void memory_select_init(void)
+void apply_memory_select_changed(plo_new_data_t plo_write_type)
 {
-    uint8_t jp_selected_bits = get_selected_memory_from_jumper();
-    switch (jp_selected_bits)
-    {
-    case 0:
-        plo_write(saved_data_1, PLO_INIT);
-        change_plo_module_states(saved_data_1[6]);
-        break;
-    case 1:
-        plo_write(saved_data_2, PLO_INIT);
-        change_plo_module_states(saved_data_2[6]);
-        break;
-    case 2:
-        plo_write(saved_data_3, PLO_INIT);
-        change_plo_module_states(saved_data_3[6]);
-        break;
-    case 3:
-        plo_write(saved_data_4, PLO_INIT);
-        change_plo_module_states(saved_data_4[6]);
-        break;
-    default:
-        plo_write(saved_data_1, PLO_INIT);
-        change_plo_module_states(saved_data_1[6]);
-        break;
-    }
-}
-
-void apply_memory_select_changed(void)
-{
-    if (tick_handle == TICK_OCCUR)
+    if ((tick_handle == TICK_OCCUR) || (plo_write_type == PLO_INIT))
     {
         uint8_t jp_selected_bits = get_selected_memory_from_jumper();
         switch (jp_selected_bits)
         {
         case 0:
-            plo_write_all(saved_data_1, PLO_NEW_DATA);
+            plo_write_all(saved_data_1, plo_write_type);
             change_plo_module_states(saved_data_1[6]);
             break;
         case 1:
-            plo_write_all(saved_data_2, PLO_NEW_DATA);
+            plo_write_all(saved_data_2, plo_write_type);
             change_plo_module_states(saved_data_2[6]);
             break;
         case 2:
-            plo_write_all(saved_data_3, PLO_NEW_DATA);
+            plo_write_all(saved_data_3, plo_write_type);
             change_plo_module_states(saved_data_3[6]);
             break;
         case 3:
-            plo_write_all(saved_data_4, PLO_NEW_DATA);
+            plo_write_all(saved_data_4, plo_write_type);
             change_plo_module_states(saved_data_4[6]);
             break;
         default:
-            plo_write_all(saved_data_1, PLO_NEW_DATA);
+            plo_write_all(saved_data_1, plo_write_type);
             change_plo_module_states(saved_data_1[6]);
             break;
         }

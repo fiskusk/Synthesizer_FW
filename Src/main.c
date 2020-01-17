@@ -90,8 +90,9 @@ void running_routine(void)
 }
 
 /**
- * @brief This function run after startup and if saved data isn't write to data
- *        memory, loaded them into memory. After that 
+ * @brief This function run after startup and if stored data isn't write to data
+ *        memory, load default values into memory. After that apply changes and
+ *        sellect plo setting according to jumper position.
  */
 void init_routine(void)
 {
@@ -138,7 +139,7 @@ int main(void)
     HAL_TIM_Base_Start_IT(&htim3);
     setbuf(stdout, NULL);
 
-    HAL_Delay(100);
+    HAL_Delay(2000);
     init_routine();
 
     /* USER CODE END 2 */

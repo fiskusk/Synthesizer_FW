@@ -228,6 +228,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)
         /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
         /*******************************************************************************/
     case CDC_SET_LINE_CODING:
+        // previous stored line coding from computer (CDC_GET_LINE_CODING) load into pbuf
         buffer[0] = pbuf[0];
         buffer[1] = pbuf[1];
         buffer[2] = pbuf[2];
@@ -238,6 +239,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)
         break;
 
     case CDC_GET_LINE_CODING:
+        // this get line coding from computer after port open
         pbuf[0] = buffer[0];
         pbuf[1] = buffer[1];
         pbuf[2] = buffer[2];
@@ -248,6 +250,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)
         break;
 
     case CDC_SET_CONTROL_LINE_STATE:
+        // this is used for get line state, if port opened or closed
         req = (USBD_SetupReqTypedef *)pbuf;
         if ((req->wValue & 0x0001) != 0)
         {

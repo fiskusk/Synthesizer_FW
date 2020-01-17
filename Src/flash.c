@@ -93,23 +93,23 @@ void apply_memory_select_changed(plo_new_data_t plo_write_type)
         switch (jp_selected_bits)
         {
         case 0:
-            plo_write_all(saved_data_1, plo_write_type);
+            plo_write(saved_data_1, plo_write_type);
             change_plo_module_states(saved_data_1[6]);
             break;
         case 1:
-            plo_write_all(saved_data_2, plo_write_type);
+            plo_write(saved_data_2, plo_write_type);
             change_plo_module_states(saved_data_2[6]);
             break;
         case 2:
-            plo_write_all(saved_data_3, plo_write_type);
+            plo_write(saved_data_3, plo_write_type);
             change_plo_module_states(saved_data_3[6]);
             break;
         case 3:
-            plo_write_all(saved_data_4, plo_write_type);
+            plo_write(saved_data_4, plo_write_type);
             change_plo_module_states(saved_data_4[6]);
             break;
         default:
-            plo_write_all(saved_data_1, plo_write_type);
+            plo_write(saved_data_1, plo_write_type);
             change_plo_module_states(saved_data_1[6]);
             break;
         }

@@ -103,6 +103,10 @@ void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type)
         plo_write_all(data, PLO_INIT);
         plo_write_all(data, PLO_OUT_ENABLE);
     }
+    else if (plo_new_data_type == PLO_NEW_DATA)
+    {
+        plo_write_all(data, PLO_NEW_DATA);
+    }
 }
 
 void plo_process_lock_status(bool data)

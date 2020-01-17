@@ -162,7 +162,7 @@ uint32_t usb_process_command(char *command_data)
         {
             if (strcasecmp(value, "clean") == 0)
             {
-                myFLASH_PageErase(0x08007800);
+                myFLASH_PageErase(USER_DATA_ADDRESS_SECTION);
             }
             else if (strcasecmp(value, "1") == 0)
             {

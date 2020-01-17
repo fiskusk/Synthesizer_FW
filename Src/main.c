@@ -66,10 +66,20 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+/**
+ * Function that call in while endless loop. Check, if serial port was open or
+ * was close.
+ * When serial port is open, process circle buffer for lock state events and
+ * buffered usb command data.
+ * When ser. port is close, check if jumper select position is changed. Than
+ * apply appropriate changes.
+ * 
+ */
 void running_routine(void)
 {
-    if (host_com_port_open_closed == HOST_COM_PORT_OPEN)
+    switch (host_com_port_open_closed)
     {
+    case HOST_COM_PORT_OPEN:
         PLO_MODULE_OUT2_ON; // TODO for test purpose only
 
         uint8_t data;
@@ -80,12 +90,14 @@ void running_routine(void)
         }
 
         usb_procesing_command_data();
-    }
-    else
-    {
+        break;
+    case HOST_COM_PORT_CLOSED:
         PLO_MODULE_OUT2_OFF; // TODO for test purpose only
         if (memory_select_event == MEMORY_SELECT_CHANGED)
             apply_memory_select_changed(PLO_NEW_DATA);
+        break;
+    default:
+        break;
     }
 }
 
@@ -139,7 +151,7 @@ int main(void)
     HAL_TIM_Base_Start_IT(&htim3);
     setbuf(stdout, NULL);
 
-    HAL_Delay(2000);
+    HAL_Delay(100);
     init_routine();
 
     /* USER CODE END 2 */

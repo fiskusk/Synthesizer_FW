@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <max2871.h>
 
+#define USER_DATA_ADDRESS_SECTION 0x08007C00
+
 extern __attribute__((__section__(".user_data"))) uint32_t saved_data_1[7];
 extern __attribute__((__section__(".user_data"))) uint32_t saved_data_2[7];
 extern __attribute__((__section__(".user_data"))) uint32_t saved_data_3[7];

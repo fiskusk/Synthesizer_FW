@@ -119,7 +119,7 @@ void apply_memory_select_changed(plo_new_data_t plo_write_type)
 
 void load_default_memory_register_values(void)
 {
-    myFLASH_PageErase(0x08007C00);
+    myFLASH_PageErase(USER_DATA_ADDRESS_SECTION);
     write_complete_data_to_flash(1, DEF_MEMORY1_REG0, DEF_MEMORY1_REG1,
                                  DEF_MEMORY1_REG2, DEF_MEMORY1_REG3,
                                  DEF_MEMORY1_REG4, DEF_MEMORY1_REG5,

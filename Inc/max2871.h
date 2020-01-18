@@ -23,8 +23,7 @@ typedef enum{
     PLO_NEW_DATA,           /**< */
     PLO_INIT,
     PLO_OUT_ENABLE,
-    PLO_CHANGED_REGISTER,
-    PLO_DATA_PROCESSED      /**< Data for PLO synthesizer is processed      */
+    PLO_CHANGED_REGISTER
 }plo_new_data_t;
 
 typedef enum{

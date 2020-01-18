@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "max2871.h"
 #include "timer.h"
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -148,7 +149,8 @@ void SysTick_Handler(void)
 void EXTI0_1_IRQHandler(void)
 {
     /* USER CODE BEGIN EXTI0_1_IRQn 0 */
-    plo_check_lock_status();
+    if (host_com_port_open_closed == HOST_COM_PORT_OPENED)
+        plo_check_lock_status();
     /* USER CODE END EXTI0_1_IRQn 0 */
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
     /* USER CODE BEGIN EXTI0_1_IRQn 1 */

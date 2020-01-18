@@ -67,15 +67,15 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 /**
- * @brief   Function that call in while endless loop. Check, if serial port was 
- *          open or was close.
- * 
- *          @note
- *          When serial port is open, process circle buffer for lock state 
- *          events and buffered usb command data.
- *          When ser. port is close, check if jumper select position is changed. 
- *          Than apply appropriate changes.
- */
+  * @brief  Function that call in while endless loop. Check, if serial port was 
+  *         open or was close.
+  *
+  *         @note
+  *         When serial port is open, process circle buffer for lock state 
+  *         events and buffered usb command data.
+  *         When ser. port is close, check if jumper select position is changed. 
+  *         Than apply appropriate changes.
+  */
 void running_routine(void)
 {
     switch (host_com_port_open_closed)
@@ -104,10 +104,10 @@ void running_routine(void)
 }
 
 /**
- * @brief This function run after startup and if stored data isn't write to data
- *        memory, load default values into memory. After that apply changes and
- *        sellect plo setting according to jumper position.
- */
+  * @brief This function run after startup and if stored data isn't write to data
+  *        memory, load default values into memory. After that apply changes and
+  *        sellect plo setting according to jumper position.
+  */
 void init_routine(void)
 {
     if (saved_data_1[0] == 0x0)

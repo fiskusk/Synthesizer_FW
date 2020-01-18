@@ -1,3 +1,14 @@
+/**
+ * @file usb.c
+ * @author Filip Klapil (klapil.filip@seznam.cz)
+ * @brief It provides processing of received data from USB VCP interface.
+ * @version 0.1
+ * @date 2020-01-18
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 #include "usb.h"
 #include "string.h"
 #include "format.h"
@@ -6,10 +17,21 @@
 #include "main.h"
 #include "stdint.h"
 
-// defines for receive buffers
-#define CMD_BUFFER_LEN  96 /**< Size of each buffer in bytes */
-#define CMD_BUFFER_CNT  2  /**< Total count of buffer        */
-/** @brief Struct for receive process buffers */
+/** @defgroup   Command_buffer_defines
+  * @brief      Defines for receive buffers
+  * @{
+  */
+
+#define CMD_BUFFER_LEN  96      /**< Size of each buffer in bytes */
+#define CMD_BUFFER_CNT  2       /**< Total count of buffer        */
+
+/**
+  * @}
+  */
+
+/** 
+  * @brief Struct for receive process buffers 
+  */
 typedef struct
 {
     uint8_t length;                 /**< Length of process data             */
@@ -18,19 +40,20 @@ typedef struct
 } cmd_buffer_t;
 
 cmd_buffer_t cmd_buffer[CMD_BUFFER_CNT]; /**< Command process buffer        */
-/**< Test data is store register data from USB commands */
+
+/**< Test data store register data from USB commands */
 uint32_t test_data[6] = {DEF_TEST_DATA_REG0, DEF_TEST_DATA_REG1,
                          DEF_TEST_DATA_REG2, DEF_TEST_DATA_REG3,
                          DEF_TEST_DATA_REG4, DEF_TEST_DATA_REG5};
 
 /**
- * @brief   This function is called when receive buffer is full. The data is
- *          loaded character by character into process buffers. When all buffers 
- *          are full, the function return back. The data is recorded until the 
- *          '\n' or '\r' character arrives. At this point the received flag is 
- *          set and is switched to the next buffer.
- * @param   c: input charater
- */
+  * @brief   This function is called when receive buffer is full. The data is
+  *          loaded character by character into process buffers. When all buffers 
+  *          are full, the function return back. The data is recorded until the 
+  *          '\n' or '\r' character arrives. At this point the received flag is 
+  *          set and is switched to the next buffer.
+  * @param   c: input charater
+  */
 void usb_data_available(uint8_t c)
 {
     static uint8_t active_buff = 0;     /**< Handle actual active buffer    */
@@ -62,10 +85,10 @@ void usb_data_available(uint8_t c)
 }
 
 /**
- * @brief   This function processes raw received data.
- * @param   command_data: Text string with received command.
- * @retval  Parsed 32-bits register value.
- */
+  * @brief   This function processes raw received data.
+  * @param   command_data: Text string with received command.
+  * @retval  Parsed 32-bits register value.
+  */
 uint32_t usb_process_command(char *command_data)
 {
     char *command;      /**< Recieved command               */
@@ -79,20 +102,19 @@ uint32_t usb_process_command(char *command_data)
     char *value5;
     char *value6;
 
-    /** 
-     * @brief   Remove all possible command characters from text command string
-     *          and replace them by NULL.
-     */
+    /** Remove all possible command characters from text command string 
+      * and replace them by NULL
+      */
     for (uint8_t i = 0; i < strlen(command_data); i++)
     {
         command_data[i] = (command_data[i] < 32 || command_data[i] > 126) ? '\0' : command_data[i];
     }
     
-    command = strtok(command_data, " ");    // Parse command part
+    command = strtok(command_data, " ");    // Command part parse 
 
     if (strcasecmp(command, "ref") == 0)
     {
-        value = strtok(NULL, " ");          // Parse action part
+        value = strtok(NULL, " ");          // Action part parse
         if (strcasecmp(value, "ext") == 0)
         {
             PLO_MODULE_EXT_REF;

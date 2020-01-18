@@ -48,7 +48,8 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
-/** @defgroup PLO Module Controls Exported Macro
+/** @defgroup   PLO_module_controls
+  * @brief      PLO module controls exported macros
   * @{
   */
 

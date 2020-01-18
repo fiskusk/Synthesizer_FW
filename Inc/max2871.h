@@ -20,17 +20,25 @@
   * 
   */
 typedef enum{
-    PLO_NEW_DATA,           /**< */
-    PLO_INIT,
-    PLO_OUT_ENABLE,
-    PLO_CHANGED_REGISTER
+    PLO_NEW_DATA,   /**< Common new register value */
+    PLO_INIT,       /**< Carries the requested initialization of the PLO    */
+    PLO_OUT_ENABLE  /**< Carries that PLO need enable outputs (after init)  */
 }plo_new_data_t;
 
+
+/**
+  * @brief Carry if PLO lock state is available or not
+  * 
+  */
 typedef enum{
-    PLO_LOCK_STATE_UNKNOWN,
-    PLO_LOCK_STATE_WAIT
+    PLO_LOCK_STATE_UNKNOWN, /**< PLO lock-state isn't known */
+    PLO_LOCK_STATE_WAIT     /**< PLO lock-state wait handle */
 }plo_lock_state_t;
 
+/**
+  * @brief 
+  * 
+  */
 extern volatile plo_lock_state_t plo_lock_state;
 
 /**

@@ -15,12 +15,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/**
+  * @brief Type of PLO new data structure definition 
+  * 
+  */
 typedef enum{
-    PLO_NEW_DATA,
+    PLO_NEW_DATA,           /**< */
     PLO_INIT,
     PLO_OUT_ENABLE,
     PLO_CHANGED_REGISTER,
-    PLO_DATA_SENDED
+    PLO_DATA_PROCESSED      /**< Data for PLO synthesizer is processed      */
 }plo_new_data_t;
 
 typedef enum{
@@ -29,6 +33,12 @@ typedef enum{
 }plo_lock_state_t;
 
 extern volatile plo_lock_state_t plo_lock_state;
+
+/**
+  * @brief  A global variable that carries information about the state of data 
+  *         processing for the PLO.
+  * 
+  */
 extern volatile plo_new_data_t plo_new_data;
 
 extern void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type);

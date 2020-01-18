@@ -15,7 +15,7 @@
 #include "usb.h"
 
 volatile plo_lock_state_t plo_lock_state = PLO_LOCK_STATE_WAIT;
-volatile plo_new_data_t plo_new_data = PLO_DATA_SENDED;
+volatile plo_new_data_t plo_new_data = PLO_DATA_PROCESSED;
 
 /** @defgroup   PLO_Synthesizer_SPI_controls
   * @brief      PLO Synthesizer SPI pins Controls Private Macros

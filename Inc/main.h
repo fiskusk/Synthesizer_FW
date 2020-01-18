@@ -52,7 +52,7 @@ extern "C" {
   * @brief      PLO module controls exported macros
   * @{
   */
-
+ 
 /**< Activates the output amplifier in the frequency synthesizer baseband (23.5 MHz to 6 GHz)     */
 #define PLO_MODULE_OUT1_ON      HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_RESET)
 

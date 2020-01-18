@@ -21,10 +21,8 @@
   * @brief      Defines for receive buffers
   * @{
   */
-
 #define CMD_BUFFER_LEN  96      /**< Size of each buffer in bytes */
 #define CMD_BUFFER_CNT  2       /**< Total count of buffer        */
-
 /**
   * @}
   */
@@ -89,18 +87,18 @@ void usb_data_available(uint8_t c)
   * @param   command_data: Text string with received command.
   * @retval  Parsed 32-bits register value.
   */
-uint32_t usb_process_command(char *command_data)
+void usb_process_command(char *command_data)
 {
     char *command;      /**< Recieved command               */
     char *sub_command;  /**< Sub-command                    */
     char *value;        /**< Carry command action value     */
-    char *value0;
-    char *value1;
-    char *value2;
-    char *value3;
-    char *value4;
-    char *value5;
-    char *value6;
+    char *register0;       /**< Carry register 0 value         */
+    char *register1;       /**< Carry register 1 value         */
+    char *register2;       /**< Carry register 2 value         */
+    char *register3;       /**< Carry register 3 value         */
+    char *register4;       /**< Carry register 4 value         */
+    char *register5;       /**< Carry register 5 value         */
+    char *module_control;       /**< Carry module controls value    */
 
     /** Remove all possible command characters from text command string 
       * and replace them by NULL
@@ -111,7 +109,7 @@ uint32_t usb_process_command(char *command_data)
     }
     
     command = strtok(command_data, " ");    // Command part parse 
-
+    // reference selection part
     if (strcasecmp(command, "ref") == 0)
     {
         value = strtok(NULL, " ");          // Action part parse
@@ -124,10 +122,10 @@ uint32_t usb_process_command(char *command_data)
         {
             PLO_MODULE_INT_REF;
         }
-        printf("OK\r");     // Sends a confirmation text string
-        plo_new_data = PLO_DATA_SENDED;
+        printf("OK\r");                     // Sends a confirmation text string
+        plo_new_data = PLO_DATA_PROCESSED;  // Data is processed
     }
-
+    // outputs selection part
     else if (strcasecmp(command, "out") == 0)
     {
         sub_command = strtok(NULL, " ");
@@ -146,35 +144,34 @@ uint32_t usb_process_command(char *command_data)
             else if (strcasecmp(value, "off") == 0)
                 PLO_MODULE_OUT2_OFF;
         }
-        printf("OK\r");
-        plo_new_data = PLO_DATA_SENDED;
+        printf("OK\r");                     // Sends a confirmation text string
+        plo_new_data = PLO_DATA_PROCESSED;  // Data is processed
     }
-
+    // plo commands section
     else if (strcasecmp(command, "plo") == 0)
     {
         sub_command = strtok(NULL, " ");
         value = strtok(NULL, " ");
-        value0 = strtok(NULL, " ");
-        value1 = strtok(NULL, " ");
-        value2 = strtok(NULL, " ");
-        value3 = strtok(NULL, " ");
-        value4 = strtok(NULL, " ");
-        value5 = strtok(NULL, " ");
-        value6 = strtok(NULL, " ");
-
+        // initialize PLO
         if (strcasecmp(sub_command, "init") == 0)
         {
-            plo_new_data = PLO_INIT;
+            // sends test_data as initialization sequence to plo
+            plo_write(test_data, PLO_INIT);  
+            printf("OK\r");                     // Sends a confirmation text string
+            plo_new_data = PLO_DATA_PROCESSED;  // Data is processed
         }
-
+        // get new register value for PLO
         else if (strcasecmp(sub_command, "set_register") == 0)
         {
+            // converted received register string into 32bit number
             uint32_t new_data = hex2int(value);
-            // save register into test_data variable
+            // store received register into test_data variable
             switch (new_data & 0x07)
             {
                 case 0:
                     test_data[0] = new_data;
+                    // if PLO muxout pin hasn't set digital lock function
+                    // set plo_lock_state to handle unknown lock state
                     if (((test_data[2] & ((1 << 28) | (1 << 27) | (1 << 26))) >> 26) != 0b110)
                         plo_lock_state = PLO_LOCK_STATE_UNKNOWN;
                     break;
@@ -194,70 +191,84 @@ uint32_t usb_process_command(char *command_data)
                     test_data[5] = new_data;
                     break;
             }
-            plo_new_data = PLO_CHANGED_REGISTER;
-            return new_data;
+            // Set command state for change one received register value for PLO
+            plo_write_register(new_data);
+            printf("OK\r");
+            plo_new_data = PLO_DATA_PROCESSED;
+            // exit this function here 
+            // and return the new registry value for further processing
         }
-
+        // section related user stored data in flash memory 
         else if (strcasecmp(sub_command, "data") == 0)
         {
+            register0 = strtok(NULL, " ");
+            register1 = strtok(NULL, " ");
+            register2 = strtok(NULL, " ");
+            register3 = strtok(NULL, " ");
+            register4 = strtok(NULL, " ");
+            register5 = strtok(NULL, " ");
+            module_control = strtok(NULL, " ");
+            // User data page erase
             if (strcasecmp(value, "clean") == 0)
             {
                 myFLASH_PageErase(USER_DATA_ADDRESS_SECTION);
             }
-            else if (strcasecmp(value, "1") == 0)
+            // User data send back to serial port
+            else if (strcasecmp(value, "stored?") == 0)
             {
-                write_complete_data_to_flash(1, value0, value1, value2, value3, value4, value5, value6);
+                printf("OK\r");             // Send confirmation string
+                flash_send_stored_data();   // Send back stored user reg data
+                plo_new_data = PLO_DATA_PROCESSED;  // Data is processed
             }
-            else if (strcasecmp(value, "2") == 0)
+            // section for store new user data
+            else if (strcasecmp(value, "1") == 0)   // store into memory 1
             {
-                write_complete_data_to_flash(2, value0, value1, value2, value3, value4, value5, value6);
+                write_complete_data_to_flash(1, register0, register1, register2, register3, register4, register5, module_control);
             }
-            else if (strcasecmp(value, "3") == 0)
+            else if (strcasecmp(value, "2") == 0)   // store into memory 2
             {
-                write_complete_data_to_flash(3, value0, value1, value2, value3, value4, value5, value6);
+                write_complete_data_to_flash(2, register0, register1, register2, register3, register4, register5, module_control);
             }
-            else if (strcasecmp(value, "4") == 0)
+            else if (strcasecmp(value, "3") == 0)   // store into memory 3
             {
-                write_complete_data_to_flash(4, value0, value1, value2, value3, value4, value5, value6);
+                write_complete_data_to_flash(3, register0, register1, register2, register3, register4, register5, module_control);
             }
-            printf("OK\r");
-            plo_new_data = PLO_DATA_SENDED;
+            else if (strcasecmp(value, "4") == 0)   // store into memory 4
+            {
+                write_complete_data_to_flash(4, register0, register1, register2, register3, register4, register5, module_control);
+            }
+            printf("OK\r");                     // Send confirmation string
+            plo_new_data = PLO_DATA_PROCESSED;  // Data is processed
         }
+        // request to check suspension status
         else if (strcasecmp(sub_command, "locked?") == 0)
         {
             plo_check_lock_status();
-            printf("OK\r");
-            plo_new_data = PLO_DATA_SENDED;
+            printf("OK\r");                     // Send confirmation string
+            plo_new_data = PLO_DATA_PROCESSED;  // Data is processed
         }
-        else if (strcasecmp(sub_command, "storedData") == 0)
+        // received string not recognized
+        else
         {
-            printf("OK\r");
-            flash_send_stored_data();
-            plo_new_data = PLO_DATA_SENDED;
+            printf("unknown command!\r");
         }
     }
-    return 0;
 }
 
+/**
+  * @brief  This function going through received buffer if available and procces
+  *         received data.
+  *         Then tests whether the lock state has changed 
+  *         and transmits the stored records in the ring lock-state buffer.
+  */
 void usb_procesing_command_data(void)
 {
     static uint8_t active_buff = 0;
 
     while (cmd_buffer[active_buff].received) // Check if data in buffer was received
     {
-        uint32_t new_register_value = usb_process_command(cmd_buffer[active_buff].buffer); // Process command
-        if (plo_new_data == PLO_INIT)
-        {
-            plo_write(test_data, plo_new_data);
-            printf("OK\r");
-            plo_new_data = PLO_DATA_SENDED;
-        }
-        else if (plo_new_data == PLO_CHANGED_REGISTER)
-        {
-            plo_write_register(new_register_value);
-            printf("OK\r");
-            plo_new_data = PLO_DATA_SENDED;
-        }
+        // Process command and get new register value if it is possible, otherwise get 0
+        usb_process_command(cmd_buffer[active_buff].buffer);
 
         cmd_buffer[active_buff].length = 0;   // Data in buffer processed, clear the length and
         cmd_buffer[active_buff].received = 0; // mark it as free

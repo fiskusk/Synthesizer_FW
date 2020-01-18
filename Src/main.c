@@ -67,32 +67,34 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 /**
- * Function that call in while endless loop. Check, if serial port was open or
- * was close.
- * When serial port is open, process circle buffer for lock state events and
- * buffered usb command data.
- * When ser. port is close, check if jumper select position is changed. Than
- * apply appropriate changes.
+ * @brief   Function that call in while endless loop. Check, if serial port was 
+ *          open or was close.
  * 
+ *          @note
+ *          When serial port is open, process circle buffer for lock state 
+ *          events and buffered usb command data.
+ *          When ser. port is close, check if jumper select position is changed. 
+ *          Than apply appropriate changes.
  */
 void running_routine(void)
 {
     switch (host_com_port_open_closed)
     {
-    case HOST_COM_PORT_OPEN:
+    case HOST_COM_PORT_OPENED:
         PLO_MODULE_OUT2_ON; // TODO for test purpose only
 
+        // check if new plo lock status occur and eventually process them
         uint8_t data;
-
         while (plo_buff_pop(&data))
         {
             plo_process_lock_status((bool)data);
         }
-
+        // check if new usb command is ready and eventually process them.
         usb_procesing_command_data();
         break;
     case HOST_COM_PORT_CLOSED:
         PLO_MODULE_OUT2_OFF; // TODO for test purpose only
+        // if jumper possition has changed, load new setting into plo
         if (memory_select_event == MEMORY_SELECT_CHANGED)
             apply_memory_select_changed(PLO_NEW_DATA);
         break;
@@ -148,11 +150,11 @@ int main(void)
     MX_USB_DEVICE_Init();
     MX_TIM3_Init();
     /* USER CODE BEGIN 2 */
-    HAL_TIM_Base_Start_IT(&htim3);
-    setbuf(stdout, NULL);
+    HAL_TIM_Base_Start_IT(&htim3);  // start timer 3
+    setbuf(stdout, NULL);           // it is necessary to redirect to usb
 
     HAL_Delay(100);
-    init_routine();
+    init_routine();     // initialize user settings
 
     /* USER CODE END 2 */
 

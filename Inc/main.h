@@ -47,12 +47,36 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+
+/** @defgroup PLO Module Controls Exported Macro
+  * @{
+  */
+
+/**< Activates the output amplifier in the frequency synthesizer baseband (23.5 MHz to 6 GHz)     */
 #define PLO_MODULE_OUT1_ON      HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_RESET)
+
+/**< Deactivates the output amplifier in the frequency synthesizer baseband (23.5 MHz to 6 GHz)   */
 #define PLO_MODULE_OUT1_OFF     HAL_GPIO_WritePin(RF_OUT1_GPIO_Port, RF_OUT1_Pin, GPIO_PIN_SET)
+
+/**<    Activates the second output which include frequency doubler 
+ *      for output frequencies from 5 GHz to 12 GHz)     */
 #define PLO_MODULE_OUT2_ON      HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_RESET)
+
+/**<    Deactivates the second output which include frequency doubler 
+ *      for output frequencies from 5 GHz to 12 GHz)     */
 #define PLO_MODULE_OUT2_OFF     HAL_GPIO_WritePin(RF_OUT2_GPIO_Port, RF_OUT2_Pin, GPIO_PIN_SET)
+
+/**< Activate the internal 10 MHz signal reference for the frequency synthesizer  */
 #define PLO_MODULE_INT_REF      HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_RESET)
+
+/**<    Activates the external signal reference for the frequency synthesizer 
+ *      that is connected to the input reference signal SMA connector. */
 #define PLO_MODULE_EXT_REF      HAL_GPIO_WritePin(INT_EXT_REF_GPIO_Port, INT_EXT_REF_Pin, GPIO_PIN_SET)
+
+/**
+  * @}
+  */
+
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

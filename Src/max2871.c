@@ -6,6 +6,21 @@
 volatile plo_lock_state_t plo_lock_state = PLO_LOCK_STATE_WAIT;
 volatile plo_new_data_t plo_new_data = PLO_DATA_SENDED;
 
+/** @defgroup PLO Synthesizer SPI pins Controls Private Macro
+ * @{
+ */
+
+#define PLO_DATA_SET HAL_GPIO_WritePin(PLO_DATA_GPIO_Port, PLO_DATA_Pin, GPIO_PIN_SET)
+#define PLO_DATA_RESET HAL_GPIO_WritePin(PLO_DATA_GPIO_Port, PLO_DATA_Pin, GPIO_PIN_RESET)
+#define PLO_CLK_SET HAL_GPIO_WritePin(PLO_CLK_GPIO_Port, PLO_CLK_Pin, GPIO_PIN_SET)
+#define PLO_CLK_RESET HAL_GPIO_WritePin(PLO_CLK_GPIO_Port, PLO_CLK_Pin, GPIO_PIN_RESET)
+#define PLO_LE_SET HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_SET)
+#define PLO_LE_RESET HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET)
+
+/**
+ * @}
+ */
+
 typedef struct
 {
     uint8_t incnt;

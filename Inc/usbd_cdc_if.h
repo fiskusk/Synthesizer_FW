@@ -90,12 +90,15 @@
 extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
+
+/** @brief Typedef enum that carry if serial port is opened or closed   */
 typedef enum{
-    HOST_COM_PORT_OPEN, 
-    HOST_COM_PORT_CLOSED
+    HOST_COM_PORT_OPENED,       /**< Indicates that serial port is opened */
+    HOST_COM_PORT_CLOSED        /**< Indicates that serial port is closed */
 }host_com_port_open_closed_t;
 
-extern host_com_port_open_closed_t host_com_port_open_closed;
+/**< Carry state if serial port is opened or closed */
+extern host_com_port_open_closed_t host_com_port_open_closed; 
 
 /* USER CODE END EXPORTED_VARIABLES */
 

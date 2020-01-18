@@ -35,7 +35,10 @@
 
 
 /* Private variables ---------------------------------------------------------*/
+
+/**< Carry state if serial port is opened or closed */
 host_com_port_open_closed_t host_com_port_open_closed = HOST_COM_PORT_CLOSED;
+/**< Buffer for line coding info */
 uint8_t buffer[7];
 
 /* USER CODE END PV */
@@ -254,7 +257,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)
         req = (USBD_SetupReqTypedef *)pbuf;
         if ((req->wValue & 0x0001) != 0)
         {
-            host_com_port_open_closed = HOST_COM_PORT_OPEN;
+            host_com_port_open_closed = HOST_COM_PORT_OPENED;
         }
         else
         {
@@ -292,7 +295,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t *Buf, uint32_t *Len)
 {
     /* USER CODE BEGIN 6 */
-
+    // going through the received buffer character by character
     for (uint8_t i = 0; i < *Len; i++)
     {
         usb_data_available(Buf[i]);
@@ -320,27 +323,20 @@ uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len)
 {
     uint8_t result = USBD_OK;
     /* USER CODE BEGIN 7 */
-    //uint64_t counter = 0;
-    //USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
-    //if (hcdc->TxState != 0){
-    //  return USBD_BUSY;
-    //}
     USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
     result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
-    //while (hcdc->TxState != 0){
-    //  counter++;
-    //}
     /* USER CODE END 7 */
     return result;
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
+/**
+ * @brief stdout redirection to USB
+ */
 int _write(int file, char const *buf, int n)
 {
-    /* stdout redirection to USB */
-    while (((USBD_CDC_HandleTypeDef *)(hUsbDeviceFS.pClassData))->TxState != 0)
-    {
-    }
+    // block in this endless while loop, if USB is busy
+    while (((USBD_CDC_HandleTypeDef *)(hUsbDeviceFS.pClassData))->TxState != 0){}
     CDC_Transmit_FS((uint8_t *)(buf), n);
     return n;
 }

@@ -6,25 +6,34 @@
 #include "main.h"
 #include "stdint.h"
 
-#define CMD_BUFFER_LEN  96 // Size of each buffer in bytes
-#define CMD_BUFFER_CNT  2  // Total count of buffer
-
+// defines for receive buffers
+#define CMD_BUFFER_LEN  96 /**< Size of each buffer in bytes */
+#define CMD_BUFFER_CNT  2  /**< Total count of buffer        */
+/** @brief Struct for receive process buffers */
 typedef struct
 {
-    uint8_t length;
-    char buffer[CMD_BUFFER_LEN];
-    bool received;
+    uint8_t length;                 /**< Length of process data             */
+    char buffer[CMD_BUFFER_LEN];    /**< Process buffer                     */
+    bool received;                  /**< Flag if buffer is ready to process */
 } cmd_buffer_t;
 
-cmd_buffer_t cmd_buffer[CMD_BUFFER_CNT];
-
+cmd_buffer_t cmd_buffer[CMD_BUFFER_CNT]; /**< Command process buffer        */
+/**< Test data is store register data from USB commands */
 uint32_t test_data[6] = {DEF_TEST_DATA_REG0, DEF_TEST_DATA_REG1,
                          DEF_TEST_DATA_REG2, DEF_TEST_DATA_REG3,
                          DEF_TEST_DATA_REG4, DEF_TEST_DATA_REG5};
 
+/**
+ * @brief   This function is called when receive buffer is full. The data is
+ *          loaded character by character into process buffers. When all buffers 
+ *          are full, the function return back. The data is recorded until the 
+ *          '\n' or '\r' character arrives. At this point the received flag is 
+ *          set and is switched to the next buffer.
+ * @param   c: input charater
+ */
 void usb_data_available(uint8_t c)
 {
-    static uint8_t active_buff = 0;
+    static uint8_t active_buff = 0;     /**< Handle actual active buffer    */
     uint8_t *pos = &cmd_buffer[active_buff].length;
 
     if (cmd_buffer[active_buff].received)
@@ -35,7 +44,7 @@ void usb_data_available(uint8_t c)
         cmd_buffer[active_buff].buffer[*pos] = 0; // Add ending zero
         cmd_buffer[active_buff].received = 1;     // Mark data in buffer as received
         if (++active_buff >= CMD_BUFFER_CNT)      // Switch to next buffer
-            active_buff = 0;
+            active_buff = 0;                      // No more buffers, switch to first.
     }
     else
     {
@@ -46,17 +55,22 @@ void usb_data_available(uint8_t c)
         }
         else
         {
-            //TODO: No more space in buffer, cannot store data. What to do with it?
+            //TODO: No more space in buffer, cannot store data.
             *pos = *pos; // Useless, just for filling in the "else" branch
         }
     }
 }
 
+/**
+ * @brief   This function processes raw received data.
+ * @param   command_data: Text string with received command.
+ * @retval  Parsed 32-bits register value.
+ */
 uint32_t usb_process_command(char *command_data)
 {
-    char *token;
-    char *sub_token;
-    char *value;
+    char *command;      /**< Recieved command               */
+    char *sub_command;  /**< Sub-command                    */
+    char *value;        /**< Carry command action value     */
     char *value0;
     char *value1;
     char *value2;
@@ -65,16 +79,20 @@ uint32_t usb_process_command(char *command_data)
     char *value5;
     char *value6;
 
+    /** 
+     * @brief   Remove all possible command characters from text command string
+     *          and replace them by NULL.
+     */
     for (uint8_t i = 0; i < strlen(command_data); i++)
     {
         command_data[i] = (command_data[i] < 32 || command_data[i] > 126) ? '\0' : command_data[i];
     }
+    
+    command = strtok(command_data, " ");    // Parse command part
 
-    token = strtok(command_data, " ");
-
-    if (strcasecmp(token, "ref") == 0)
+    if (strcasecmp(command, "ref") == 0)
     {
-        value = strtok(NULL, " ");
+        value = strtok(NULL, " ");          // Parse action part
         if (strcasecmp(value, "ext") == 0)
         {
             PLO_MODULE_EXT_REF;
@@ -84,22 +102,22 @@ uint32_t usb_process_command(char *command_data)
         {
             PLO_MODULE_INT_REF;
         }
-        printf("OK\r");
+        printf("OK\r");     // Sends a confirmation text string
         plo_new_data = PLO_DATA_SENDED;
     }
 
-    else if (strcasecmp(token, "out") == 0)
+    else if (strcasecmp(command, "out") == 0)
     {
-        sub_token = strtok(NULL, " ");
+        sub_command = strtok(NULL, " ");
         value = strtok(NULL, " ");
-        if (strcasecmp(sub_token, "1") == 0)
+        if (strcasecmp(sub_command, "1") == 0)
         {
             if (strcasecmp(value, "on") == 0)
                 PLO_MODULE_OUT1_ON;
             else if (strcasecmp(value, "off") == 0)
                 PLO_MODULE_OUT1_OFF;
         }
-        else if (strcasecmp(sub_token, "2") == 0)
+        else if (strcasecmp(sub_command, "2") == 0)
         {
             if (strcasecmp(value, "on") == 0)
                 PLO_MODULE_OUT2_ON;
@@ -110,9 +128,9 @@ uint32_t usb_process_command(char *command_data)
         plo_new_data = PLO_DATA_SENDED;
     }
 
-    else if (strcasecmp(token, "plo") == 0)
+    else if (strcasecmp(command, "plo") == 0)
     {
-        sub_token = strtok(NULL, " ");
+        sub_command = strtok(NULL, " ");
         value = strtok(NULL, " ");
         value0 = strtok(NULL, " ");
         value1 = strtok(NULL, " ");
@@ -122,12 +140,12 @@ uint32_t usb_process_command(char *command_data)
         value5 = strtok(NULL, " ");
         value6 = strtok(NULL, " ");
 
-        if (strcasecmp(sub_token, "init") == 0)
+        if (strcasecmp(sub_command, "init") == 0)
         {
             plo_new_data = PLO_INIT;
         }
 
-        else if (strcasecmp(sub_token, "set_register") == 0)
+        else if (strcasecmp(sub_command, "set_register") == 0)
         {
             uint32_t new_data = hex2int(value);
             // save register into test_data variable
@@ -158,7 +176,7 @@ uint32_t usb_process_command(char *command_data)
             return new_data;
         }
 
-        else if (strcasecmp(sub_token, "data") == 0)
+        else if (strcasecmp(sub_command, "data") == 0)
         {
             if (strcasecmp(value, "clean") == 0)
             {
@@ -183,13 +201,13 @@ uint32_t usb_process_command(char *command_data)
             printf("OK\r");
             plo_new_data = PLO_DATA_SENDED;
         }
-        else if (strcasecmp(sub_token, "locked?") == 0)
+        else if (strcasecmp(sub_command, "locked?") == 0)
         {
             plo_check_lock_status();
             printf("OK\r");
             plo_new_data = PLO_DATA_SENDED;
         }
-        else if (strcasecmp(sub_token, "storedData") == 0)
+        else if (strcasecmp(sub_command, "storedData") == 0)
         {
             printf("OK\r");
             flash_send_stored_data();

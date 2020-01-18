@@ -1,3 +1,14 @@
+/**
+  * @file       flash.h
+  * @author     Filip Klapil (klapil.filip@seznam.cz)
+  * @brief      Header file flash storage operations
+  * @version    0.1
+  * @date       2020-01-18
+  * 
+  * @copyright  Copyright (c) 2020
+  * 
+  */
+
 #ifndef _FLASH_H
 #define _FLASH_H
 

@@ -1,3 +1,14 @@
+/**
+  * @file       max2871.h
+  * @author     Filip Klapil (klapil.filip@seznam.cz)
+  * @brief      Header file for PLO MAX2871.
+  * @version    0.1
+  * @date       2020-01-18
+  * 
+  * @copyright  Copyright (c) 2020
+  * 
+  */
+
 #ifndef _MAX2871_H
 #define _MAX2871_H
 

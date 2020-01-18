@@ -1,3 +1,14 @@
+/**
+  * @file       timer.c
+  * @author     Filip Klapil (klapil.filip@seznam.cz)
+  * @brief      This file contains timer related functions
+  * @version    0.1
+  * @date       2020-01-18
+  * 
+  * @copyright  Copyright (c) 2020
+  * 
+  */
+
 #include "timer.h"
 #include "gpio.h"
 

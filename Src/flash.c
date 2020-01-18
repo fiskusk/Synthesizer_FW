@@ -1,3 +1,14 @@
+/**
+  * @file       flash.c
+  * @author     Filip Klapil (klapil.filip@seznam.cz)
+  * @brief      This file contains functions related user data storage into flash.
+  * @version    0.1
+  * @date       2020-01-18
+  * 
+  * @copyright  Copyright (c) 2020
+  * 
+  */
+
 #include "flash.h"
 #include "gpio.h"
 #include "format.h"

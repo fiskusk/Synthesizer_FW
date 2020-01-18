@@ -1,13 +1,13 @@
 /**
- * @file usb.c
- * @author Filip Klapil (klapil.filip@seznam.cz)
- * @brief It provides processing of received data from USB VCP interface.
- * @version 0.1
- * @date 2020-01-18
- * 
- * @copyright Copyright (c) 2020
- * 
- */
+  * @file       usb.c
+  * @author     Filip Klapil (klapil.filip@seznam.cz)
+  * @brief      It provides processing of received data from USB VCP interface.
+  * @version    0.1
+  * @date       2020-01-18
+  *
+  * @copyright  Copyright (c) 2020
+  * 
+  */
 
 #include "usb.h"
 #include "string.h"

@@ -1,3 +1,15 @@
+/**
+  * @file       format.c
+  * @author     Filip Klapil (klapil.filip@seznam.cz)
+  * @brief      It provides my formating functions. Include convert from hex
+  *             char string to 32bit uint number, or lsb to msb reversal func
+  * @version    0.1
+  * @date       2020-01-18
+  * 
+  * @copyright  Copyright (c) 2020
+  * 
+  */
+
 #include "format.h"
 
 uint32_t hex2int(char *hex)

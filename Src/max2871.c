@@ -1,3 +1,14 @@
+/**
+  * @file       max2871.c
+  * @author     Filip Klapil (klapil.filip@seznam.cz)
+  * @brief      This file contains functions related PLO MAX2871.
+  * @version    0.1
+  * @date       2020-01-18
+  * 
+  * @copyright  Copyright (c) 2020
+  * 
+  */
+
 #include "max2871.h"
 #include "gpio.h"
 #include "format.h"

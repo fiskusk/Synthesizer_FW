@@ -48,7 +48,6 @@ extern volatile plo_lock_state_t plo_lock_state;
   */
 extern volatile plo_new_data_t plo_new_data;
 
-extern void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type);
 extern void plo_write_register(uint32_t register_data);
 extern void plo_check_lock_status(void);
 extern bool plo_buff_pop(uint8_t * out_data);

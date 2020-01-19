@@ -17,19 +17,29 @@
 #include "max2871.h"
 #include "timer.h"
 
-/*****************************************************************************/
-/* saved_data_x[0] ... saved_data_x[5] are appropriate registers for MAX2871 */
-/* x is possition of one of four memories.                                   */
-/* saved_data_x[6] contains other setting for module as a whole              */
-/* saved_data_x[6] 0. bit is enable output 1 (1 - en, 0 - dis.)              */
-/* saved_data_x[6] 1. bit is enable output 2 (1 - en, 0 - dis.)              */
-/* saved_data_x[6] 2. bit external (1) or internal (0) freq. reference       */
-/*****************************************************************************/
+/** @defgroup Stored_Data_Variables
+  * @brief  stored settings for PLO
+  * @note   saved_data_1[0] ... saved_data_1[5] are appropriate registers 
+  *         for MAX2871 x is possition of one of four memories.
+  *         saved_data_1[6] contains other setting for module as a whole
+  *         saved_data_1[6] 0. bit is enable output 1 (1 - en, 0 - dis.)
+  *         saved_data_1[6] 1. bit is enable output 2 (1 - en, 0 - dis.)
+  *         saved_data_1[6] 2. bit external (1) or internal (0) freq. reference
+  * @{
+  */
 __attribute__((__section__(".user_data"))) uint32_t saved_data_1[7];
 __attribute__((__section__(".user_data"))) uint32_t saved_data_2[7];
 __attribute__((__section__(".user_data"))) uint32_t saved_data_3[7];
 __attribute__((__section__(".user_data"))) uint32_t saved_data_4[7];
+/**
+  * @}
+  */
 
+/**
+  * @brief Use this function to control PLO module periferials (outputs, ref switch)
+  * 
+  * @param control_register: input control register value
+  */
 void change_plo_module_states(uint32_t control_register)
 {
     (control_register & (1 << 0)) ? PLO_MODULE_OUT1_ON : PLO_MODULE_OUT1_OFF;
@@ -37,9 +47,16 @@ void change_plo_module_states(uint32_t control_register)
     ((control_register & (1 << 2)) >> 2) ? PLO_MODULE_EXT_REF : PLO_MODULE_INT_REF;
 }
 
+/**
+  * @brief  Use for page memory erase
+  * @note   https://www.st.com/content/ccc/resource/technical/document/reference_manual/c2/f8/8a/f2/18/e6/43/96/DM00031936.pdf/files/DM00031936.pdf/jcr:content/translations/en.DM00031936.pdf
+  *         page 55
+  *         https://community.st.com/s/question/0D50X00009XkfIO/stm32f0-help-with-flash-to-read-and-write-hal-libraries
+  * @param address The starting address of the page to delete
+  */
 void myFLASH_PageErase(uint32_t address)
 {
-    HAL_FLASH_Unlock();
+    HAL_FLASH_Unlock();     // first of all, you must unlock access to flash 
     FLASH->CR |= FLASH_CR_PER;                  /* (1) */
     FLASH->AR = address;                        /* (2) */
     FLASH->CR |= FLASH_CR_STRT;                 /* (3) */
@@ -49,12 +66,19 @@ void myFLASH_PageErase(uint32_t address)
         FLASH->SR |= FLASH_SR_EOP;              /* (6)*/
     }
     FLASH->CR &= ~FLASH_CR_PER;                 /* (7) */
-    HAL_FLASH_Lock();
+    HAL_FLASH_Lock();       // finnaly lock the flash memory
 }
 
-void write_data_to_flash(uint8_t position, uint32_t index, uint32_t data)
+/**
+  * @brief Function write input data into data flash part
+  * 
+  * @param position Specifies which of the four memories the data is intended for. (1-4)
+  * @param index Specifies which registry the data applies to. (0-6)
+  * @param data 32-bit unsigned integer data value to write
+  */
+void write_data_to_flash(uint8_t position, uint8_t index, uint32_t data)
 {
-    HAL_FLASH_Unlock();
+    HAL_FLASH_Unlock();     // First of all unlock flash partition access
 
     switch (position)
     {
@@ -71,9 +95,22 @@ void write_data_to_flash(uint8_t position, uint32_t index, uint32_t data)
         HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, (uint32_t)(&saved_data_4[index]), data);
         break;
     }
-    HAL_FLASH_Lock();
+    HAL_FLASH_Lock();       // lock flash partition
 }
 
+/**
+  * @brief  The function writes the complete set of registers (0-6) 
+  *         that enter the function to the memory location (1-4).
+  * 
+  * @param possition:    One of 4 possible memory positions
+  * @param val0:         MAX2871 Register 0
+  * @param val1:         MAX2871 Register 1
+  * @param val2:         MAX2871 Register 2
+  * @param val3:         MAX2871 Register 3
+  * @param val4:         MAX2871 Register 4
+  * @param val5:         MAX2871 Register 5
+  * @param val6:         PLO module control register value
+  */
 void write_complete_data_to_flash(uint8_t possition, char *val0,
                                   char *val1, char *val2, char *val3,
                                   char *val4, char *val5, char *val6)
@@ -87,21 +124,18 @@ void write_complete_data_to_flash(uint8_t possition, char *val0,
     write_data_to_flash(possition, 6, hex2int(val6));
 }
 
-uint8_t get_selected_memory_from_jumper(void)
-{
-    volatile uint8_t bit0 = HAL_GPIO_ReadPin(JP2_GPIO_Port, JP2_Pin);
-    volatile uint8_t bit1 = HAL_GPIO_ReadPin(JP1_GPIO_Port, JP1_Pin);
-    bit0 = (1 << 0) & ~bit0;
-    bit1 = (1 << 0) & ~bit1;
-    return bit0 | (bit1 << 1);
-}
-
+/**
+  * @brief This function apply memory select according to jumper possition settings
+  * 
+  * @param plo_write_type Type of write to MAX2871. PLO_NEW_DATA or PLO_INIT
+  */
 void apply_memory_select_changed(plo_new_data_t plo_write_type)
 {
     if ((tick_handle == TICK_OCCUR) || (plo_write_type == PLO_INIT))
     {
-        uint8_t jp_selected_bits = get_selected_memory_from_jumper();
-        switch (jp_selected_bits)
+        // Get jumper settings and switch-case apply changes
+        switch (((1 << 0) & ~HAL_GPIO_ReadPin(JP2_GPIO_Port, JP2_Pin)) | \
+            (((1 << 0) & ~HAL_GPIO_ReadPin(JP1_GPIO_Port, JP1_Pin)) << 1))
         {
         case 0:
             plo_write(saved_data_1, plo_write_type);
@@ -128,6 +162,13 @@ void apply_memory_select_changed(plo_new_data_t plo_write_type)
     }
 }
 
+/**
+  * @brief  Use this function to load the default register values, if necessary.
+  *         For example, after programming, the user data partition is empty.
+  *         Alternatively, if the user cleared the memory settings by USB
+  *         command, the default values will be loaded after startup.
+  * 
+  */
 void load_default_memory_register_values(void)
 {
     myFLASH_PageErase(USER_DATA_ADDRESS_SECTION);
@@ -149,6 +190,10 @@ void load_default_memory_register_values(void)
                                  DEF_MEMORY4_REG6);
 }
 
+/**
+  * @brief This function sends back the stored data in the user memory to the serial link.
+  * 
+  */
 void flash_send_stored_data(void)
 {
     printf("stored_data_1 %08x %08x %08x %08x %08x %08x %08x\r",

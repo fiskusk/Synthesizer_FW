@@ -14,11 +14,16 @@
 
 #include "gpio.h"
 
+/**
+  * @brief This type handle, if tick occur or not
+  * 
+  */
 typedef enum{
-    TICK_OCCUR, 
-    TICK_NOT_OCCUR
+    TICK_OCCUR,         /**< Tick has occurred      */
+    TICK_NOT_OCCUR      /**< Tick did not occur     */
 }tick_handle_t;
 
+/**< Handle if tick occur or not    */
 extern tick_handle_t tick_handle;
 
 extern void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);

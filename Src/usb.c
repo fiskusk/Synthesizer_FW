@@ -39,7 +39,7 @@ typedef struct
 
 cmd_buffer_t cmd_buffer[CMD_BUFFER_CNT]; /**< Command process buffer        */
 
-/**< Test data store register data from USB commands */
+/**< Stored registers data from USB commands */
 uint32_t test_data[6] = {DEF_TEST_DATA_REG0, DEF_TEST_DATA_REG1,
                          DEF_TEST_DATA_REG2, DEF_TEST_DATA_REG3,
                          DEF_TEST_DATA_REG4, DEF_TEST_DATA_REG5};

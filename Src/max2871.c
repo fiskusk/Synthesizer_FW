@@ -41,8 +41,8 @@ volatile plo_new_data_t plo_new_data;
 #define PLO_LE_RESET HAL_GPIO_WritePin(PLO_LE_GPIO_Port, PLO_LE_Pin, GPIO_PIN_RESET)
 
 /**
- * @}
- */
+  * @}
+  */
 
 typedef struct
 {

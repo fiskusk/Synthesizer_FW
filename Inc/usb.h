@@ -28,6 +28,7 @@
   * @}
   */
 
+/**< Stored registers data from USB commands */
 extern uint32_t test_data[6];
 
 extern void usb_data_available(uint8_t c);

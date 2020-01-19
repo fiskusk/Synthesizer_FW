@@ -12,6 +12,14 @@
 
 #include "format.h"
 
+/**
+  * @brief  This function convert 32bits hexadecimal number (max 8 hex digits)
+  *         entered as a text string to 32bits unsigned integer number.
+  * @note   https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int/39394256#39394256
+  * @param  hex: A hexadecimal number entered as a text string. 
+  *              It supports both a-f and A-F characters.
+  * @return uint32_t The resulting converted value.
+  */
 uint32_t hex2int(char *hex)
 {
     uint32_t val = 0;
@@ -32,7 +40,13 @@ uint32_t hex2int(char *hex)
     return val;
 }
 
-/*************************************************************************/
+/**
+  * @brief  Use this function to revers bits in a 32-bit number.
+  *         Numbers of bits 3210 to 0123.
+  * @note   https://stackoverflow.com/questions/7467997/reversing-the-bits-in-an-integer-x
+  * @param  input: 32-bit unsigned integer number for swap
+  * @return uint32_t 32-bit swaped number
+  */
 uint32_t lsb_to_msb_bit_reversal(uint32_t input)
 {
     input = (((input & 0xaaaaaaaa) >> 1) | ((input & 0x55555555) << 1));

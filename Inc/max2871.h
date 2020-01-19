@@ -36,7 +36,7 @@ typedef enum{
 }plo_lock_state_t;
 
 /**
-  * @brief 
+  * @brief Carry if PLO lock state is available or not 
   * 
   */
 extern volatile plo_lock_state_t plo_lock_state;

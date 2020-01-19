@@ -32,12 +32,17 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+
+/**
+  * @brief Indicate if change of memory sellect occur 
+  * 
+  */
 typedef enum{
-    MEMORY_SELECT_CHANGED,
-    MEMORY_SELECT_WAIT,
-    MEMORY_SELECT_IDLE
+    MEMORY_SELECT_CHANGED,      /**< Change of memory occur     */
+    MEMORY_SELECT_WAIT          /**< Waiting for new change     */
 }memory_select_event_t;
 
+/**< Indicate if change of memory sellect occur */
 extern volatile memory_select_event_t memory_select_event;
 /* USER CODE END ET */
 

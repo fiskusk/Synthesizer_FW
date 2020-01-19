@@ -150,7 +150,7 @@ void EXTI0_1_IRQHandler(void)
 {
     /* USER CODE BEGIN EXTI0_1_IRQn 0 */
     if (host_com_port_open_closed == HOST_COM_PORT_OPENED)
-        plo_check_lock_status();
+        plo_check_lock_status(); // only if serial port opened
     /* USER CODE END EXTI0_1_IRQn 0 */
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
     /* USER CODE BEGIN EXTI0_1_IRQn 1 */
@@ -164,8 +164,8 @@ void EXTI0_1_IRQHandler(void)
 void EXTI4_15_IRQHandler(void)
 {
     /* USER CODE BEGIN EXTI4_15_IRQn 0 */
-    memory_select_event = MEMORY_SELECT_CHANGED;
-    tick_handle = TICK_NOT_OCCUR;
+    memory_select_event = MEMORY_SELECT_CHANGED; //jumper memory select changed handle
+    tick_handle = TICK_NOT_OCCUR;                // reset tick handle
     /* USER CODE END EXTI4_15_IRQn 0 */
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);

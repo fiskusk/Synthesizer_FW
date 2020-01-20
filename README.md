@@ -47,14 +47,14 @@ Src/timer.c \
 Src/format.c \
 Src/usb.c \
 ```
-Pro programování a ladění vyvíjeného programu jsem používal dev-kit [STM32F4DISCOVERY](https://www.st.com/en/evaluation-tools/stm32f4discovery.html), který obsahuje ST-LINK V2. Ten se dá jednoduše použít pro programování/ladění programu mimo vývojovou desku, po změně nastavení zkratovacích propojekt na kitu.
+Pro programování a ladění vyvíjeného programu jsem používal dev-kit [STM32F4DISCOVERY](https://www.st.com/en/evaluation-tools/stm32f4discovery.html), který obsahuje ST-LINK V2. Ten se dá jednoduše použít pro programování/ladění programu mimo vývojovou desku, po změně nastavení zkratovacích propojek na kitu.
 
-Program byl překládán utilitou make, kterou jsem měl nainstalovánou na Linuxovém sub-systému [(WSL)](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
+Program byl překládán utilitou make, která je nainstalována na Linuxovém sub-systému [(WSL)](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
 ### Hlavní program
 Hlavní program před vstupem do nekonečné smyčky provede inicializaci periferií s využitím HAL knihoven. Dále spustí časovač 3, provede část z úkonů pro přesměrování výstupu stdout na USB VCP (například pro příkaz `printf`), počká 100 ms a spustí moji inicializační rutinu `init_routine()`. V nekonečné smyčce pak volá `running_routine()`, která se věnuje obsluze hlavního programu.
 
-Inicializační rutina má za úkol při zjištění, že uživatelskí paměť pro 4 nastavení syntezátoru je prázdná, nahrát defaultní hodnoty a provést inicializaci syntezátoru s respektováním vybrané pozice zkratovací propojkou.
+Inicializační rutina má za úkol při zjištění, že uživatelská paměť pro 4 nastavení syntezátoru je prázdná, nahrát defaultní hodnoty a provést inicializaci syntezátoru s respektováním vybrané pozice zkratovací propojkou.
 
 ```C
 void init_routine(void)
@@ -69,9 +69,9 @@ void init_routine(void)
 
 Funkce volaná v nekonečné smyčce vykonává obsluhu stavů, podle toho, zda-li je sériový port otevřen, či nikoliv. 
 
-Pokud je port otevřený, pro testovací účely si rozvěcuji led diodu. Jestliže jsou k dispozici nová data v kruhovém zásobníku, který je plněn při změně stavu zavěšení smyčky fázového závěsu PLO, postupně je zpracovávám. Zpracováním je myšleno odeslání odpovídajícího textového řetězce na sériovou linku. Jako poslední se volá funkce, zajišťující zpracování přijatých řídících dat z rozhraní USB.
+Pokud je port otevřený, pro testovací účely si rozsvěcuji led diodu. Jestliže jsou k dispozici nová data v kruhovém zásobníku, který je plněn při změně stavu zavěšení smyčky fázového závěsu PLO, postupně je zpracovávám. Zpracováním je myšleno odeslání odpovídajícího textového řetězce na sériovou linku. Jako poslední se volá funkce, zajišťující zpracování přijatých řídících dat z rozhraní USB.
 
-Jestliže je port zavřený, opět využívám led diody pro indikaci zavřeného portu (dioda nesvítí) a kontroluji stav, jestli nebyla provedena změna na zkratovací propojce, která určuje nastavený PLO.
+Jestliže je port zavřený, opět využívám led diody pro indikaci zavřeného portu (dioda nesvítí) a kontroluji stav, jestli nebyla provedena změna na zkratovací propojce, která určuje nastavení PLO.
 
 ```C
 void running_routine(void)
@@ -103,7 +103,7 @@ void running_routine(void)
 ```
 
 ### Autonomní režim řízení syntezátoru
-Navržený modul je schopný si uchovat i po odpojení napájení 4 nastavení syntezátoru, mezi kterými lze vybírat vybírat zkratovací propojkou. Ta je umístěna na kratší hraně modulu u konektoru USB. Pro uchování nastavení i při odpojeném napájení, je nutné data uložit do paměti programu. 
+Navržený modul je schopný si uchovat i po odpojení napájení 4 nastavení syntezátoru, mezi kterými lze vybírat zkratovací propojkou. Ta je umístěna na kratší hraně modulu u konektoru USB. Pro uchování nastavení i při odpojeném napájení, je nutné data uložit do paměti programu. 
 
 #### Datová paměť v oblasti paměti programu
 Funkce, které zajišťují práci s programovou pamětí se nacházejí v souboru [flash.c](Src/flash.c). Dále bylo nutné upravit linker script soubor [STM32F042F6Px_FLASH.ld](STM32F042F6Px_FLASH.ld).
@@ -132,8 +132,8 @@ user_data :
 ...
 ```
 
-Proměnné uchovávající nastavení lze pak kódu definovat takto:
-```
+Proměnné uchovávající nastavení lze pak v kódu definovat takto:
+```C
 __attribute__((__section__(".user_data"))) uint32_t saved_data_1[7];
 __attribute__((__section__(".user_data"))) uint32_t saved_data_2[7];
 __attribute__((__section__(".user_data"))) uint32_t saved_data_3[7];
@@ -144,7 +144,7 @@ __attribute__((__section__(".user_data"))) uint32_t saved_data_4[7];
 
 Do paměti programu nelze zasahovat, dokud není odemčena HAL funkcí `HAL_FLASH_Unlock()`. Po provedení patřičných změn je zase nutné přístup k paměti uzamknout, k čemu slouží funkce `HAL_FLASH_Lock()`.
 
-Dalším nutným úkonem, bez kterého nelze data do této paměti zapisovat, je vymazání celé stránky dat, kam se data budou zapisovat. Existuje HAL funkce, která by toto měla zajišťovat, nicméně mě tato funkce nechtěla plnit svůj účel. Proto jsem [na tomto odkaze](https://community.st.com/s/question/0D50X00009XkfIO/stm32f0-help-with-flash-to-read-and-write-hal-libraries) našel rešení a napsal vlastní funkci pro smazání stránky v programové paměti. Do funkce vstupuje adresa začátku stránky. Paměť je rozdělena, jak již bylo několikrát zmíněno na stránky, kdy každá stránka má 1kB. Viz [tento dokument](https://www.st.com/content/ccc/resource/technical/document/reference_manual/c2/f8/8a/f2/18/e6/43/96/DM00031936.pdf/files/DM00031936.pdf/jcr:content/translations/en.DM00031936.pdf) na stránce 55.
+Dalším nutným úkonem, bez kterého nelze data do této paměti zapisovat, je vymazání celé stránky dat, kam se data budou zapisovat. Existuje HAL funkce, která by toto měla zajišťovat. Nicméně tato funkce má nějaké chyby. Proto jsem [na tomto odkaze](https://community.st.com/s/question/0D50X00009XkfIO/stm32f0-help-with-flash-to-read-and-write-hal-libraries) našel rešení a napsal vlastní funkci pro smazání stránky v programové paměti. Do funkce vstupuje adresa začátku stránky. Paměť je rozdělena, jak již bylo několikrát zmíněno na stránky, kdy každá stránka má 1kB. Viz [tento dokument](https://www.st.com/content/ccc/resource/technical/document/reference_manual/c2/f8/8a/f2/18/e6/43/96/DM00031936.pdf/files/DM00031936.pdf/jcr:content/translations/en.DM00031936.pdf) na stránce 55.
 
 ```C
 void myFLASH_PageErase(uint32_t address)
@@ -164,9 +164,9 @@ void myFLASH_PageErase(uint32_t address)
 ```
 Samotný zápis uživatelských dat pak využívá HAL funkce `HAL_StatusTypeDef HAL_FLASH_Program(uint32_t TypeProgram, uint32_t Address, uint64_t Data)`. Funkci volám s parametrem  `TypeProgram` v mém případě `FLASH_TYPEPROGRAM_WORD`, čímž definuji, že budu zapisovat celé 32. bitové číslo. Adresa, kam se má zapisovat bude například pro první paměť `(&saved_data_1[index])`, kde index představuje o jaký registr se jedná (0-6). Posledním parametrem už jsou samotná 32-bitová `Data`.
 
-Pro jednoduší implementaci v mé aplikaci jsem napsal funkci `void write_data_to_flash(uint8_t position, uint8_t index, uint32_t data)`, která na pozici (1-4) ukládá data určená pro jeden ze 7 registrů (index = 0 až 6).
+Pro jednodušší implementaci v mé aplikaci jsem napsal funkci `void write_data_to_flash(uint8_t position, uint8_t index, uint32_t data)`, která na pozici (1-4) ukládá data určená pro jeden ze 7 registrů (index = 0 až 6).
 
-```
+```C
 void write_data_to_flash(uint8_t position, uint8_t index, uint32_t data)
 {
     HAL_FLASH_Unlock();     // First of all unlock flash partition access
@@ -190,11 +190,11 @@ void write_data_to_flash(uint8_t position, uint8_t index, uint32_t data)
 }
 ```
 
-Jelikož, je někdy potřeba zapsat obsah všech 7 registrů pro určitou pozici v paměti naráz vytvořil jsem funkci `void write_complete_data_to_flash(uint8_t possition, char *val0, char *val1, char *val2, char *val3, char *val4, char *val5, char *val6)`. Tedy na pozici 1-4 uloží data, která do funkce stupují jako *valX (kde x je registr 0-6).
+Jelikož je někdy potřeba zapsat obsah všech 7 registrů pro určitou pozici v paměti naráz, vytvořil jsem funkci `void write_complete_data_to_flash(uint8_t possition, char *val0, char *val1, char *val2, char *val3, char *val4, char *val5, char *val6)`. Tedy na pozici 1-4 uloží data, která do funkce stupují jako *valX (kde x je registr 0-6).
 
-Jednou z funkcí, která pracuje s těmito uživatelskými daty je `void apply_memory_select_changed(plo_new_data_t plo_write_type)`. Ta je volána například při inicializaci modulu syntezátoru po spuštění, nebo při změně pozice zkratovací propojky. Podle toho také pak data nahraje do syntezátoru MAX2871. Při přivedení napájení je totiž nutné provést inicializační proceduru, která bude dále popsána v sekci týkající se funkcí pro PLO MAX2871. Ta je totiž odlišná od algoritmu změny řídících registrů při normálním provozu. Při parametru `plo_write_type == PLO_INIT` funkce nečeká, než se nastaví `tick_handle` na `TICK_OCCUR` (jelikož je z hlavního programu volána v nekonečné smyčce) a okamžitě nahráje data z uživatelské paměti do frekvenčního syntezátoru jako inicializační. Během dalšího volání v běžném provozu se funkce volá s parametrem PLO_NEW_DATA, kdy nahrávání do PLO je podmínkou pozdrženo, než se dosáhne periody čítače (max 1 s), kdy se nastaví TICK_OCCUR (před voláním funkce je nastaven na TICK_NOT_OCCUR). Tímto jsou ošetřeny případné zákmity signálu při změně pozice propojky. Předpoklad je, že po takovém čase už je signál na pinu po změně stabilní.
+Jednou z funkcí, která pracuje s těmito uživatelskými daty je `void apply_memory_select_changed(plo_new_data_t plo_write_type)`. Ta je volána například při inicializaci modulu syntezátoru po spuštění, nebo při změně pozice zkratovací propojky. Podle toho také pak data nahraje do syntezátoru MAX2871. Při přivedení napájení je totiž nutné provést inicializační proceduru, která bude dále popsána v sekci týkající se funkcí pro PLO MAX2871. Ta je totiž odlišná od algoritmu změny řídících registrů při normálním provozu. Při parametru `plo_write_type == PLO_INIT` funkce nečeká, než se nastaví `tick_handle` na `TICK_OCCUR` (jelikož je z hlavního programu volána v nekonečné smyčce) a okamžitě data nahraje z uživatelské paměti do frekvenčního syntezátoru jako inicializační. Během dalšího volání v běžném provozu se funkce volá s parametrem PLO_NEW_DATA, kdy nahrávání do PLO je podmínkou pozdrženo, než se dosáhne periody čítače (max 1 s), kdy se nastaví TICK_OCCUR (před voláním funkce je nastaven na TICK_NOT_OCCUR). Tímto jsou ošetřeny případné zákmity signálu při změně pozice propojky. Předpokladem je, že po takovém čase už je signál na pinu po změně stabilní.
 
-```
+```C
 void apply_memory_select_changed(plo_new_data_t plo_write_type)
 {
     if ((tick_handle == TICK_OCCUR) || (plo_write_type == PLO_INIT))
@@ -230,7 +230,7 @@ void apply_memory_select_changed(plo_new_data_t plo_write_type)
 ```
 Pro každou pozici zkratovací propojky, je po nahrání registrů do MAX2871 také aplikováno nastavení pro komponenty modulu syntezátoru (aktivace odpovídajících výstupů, volba reference). K tomu slouží právě funkce `void change_plo_module_states(uint32_t control_register)`.
 
-```
+```C
 void change_plo_module_states(uint32_t control_register)
 {
     (control_register & (1 << 0)) ? PLO_MODULE_OUT1_ON : PLO_MODULE_OUT1_OFF;
@@ -241,9 +241,9 @@ void change_plo_module_states(uint32_t control_register)
 Poslední nepopsanou funkcí, která s touto pamětí operuje, je funkce `void flash_send_stored_data(void)`. Ta jednoduše odešle obsah uživatelské paměti na USB VCP.
 
 #### Změny pozice zkratovací propojky
-Při generování projektu v CubeMX jsem nastavil volání přerušení v případě, že dojde ke změně signálu na pinech, kde je umístěna pinová lišta pro zkratovací propojku. Přerušení se vygeneruje jak pro sestupnou tak i pro náběžnou hranu. Obsluha přerušení se nachází ve funkci `void EXTI4_15_IRQHandler(void)` v souboru [stm32f0xx_it.c](Src/stm32f0xx_it.c), který je již předpřipravený generováním kódu z CubeMX. Přerušení musí být krátké, proto se v pouze nastaví příznak, že byla detekována změna `memory_select_event = MEMORY_SELECT_CHANGED` a vyresetuje se `tick_handle = TICK_NOT_OCCUR`. Což jak už bylo zmíněno, slouží k aplikaci neblokujícího čekání pro ošetření před zákmity. Tyto příznaky se pak kontrolují v hlavním programu, viz. [výše](#hlavní-program).
+Při generování projektu v CubeMX jsem nastavil volání přerušení v případě, že dojde ke změně signálu na pinech, kde je umístěna pinová lišta pro zkratovací propojku. Přerušení se vygeneruje jak pro sestupnou tak i pro náběžnou hranu. Obsluha přerušení se nachází ve funkci `void EXTI4_15_IRQHandler(void)` v souboru [stm32f0xx_it.c](Src/stm32f0xx_it.c), který je již předpřipravený generováním kódu z CubeMX. Přerušení musí být krátké, proto se pouze nastaví příznak, že byla detekována změna `memory_select_event = MEMORY_SELECT_CHANGED` a vyresetuje se `tick_handle = TICK_NOT_OCCUR`. Což jak už bylo zmíněno, slouží k aplikaci neblokujícího čekání pro ošetření před zákmity. Tyto příznaky se pak kontrolují v hlavním programu, viz. [výše](#hlavní-program).
 
-```
+```C
 void EXTI4_15_IRQHandler(void)
 {
     /* USER CODE BEGIN EXTI4_15_IRQn 0 */
@@ -259,9 +259,9 @@ void EXTI4_15_IRQHandler(void)
 ```
 
 #### Použití časovače
-Použitý časovač číslo 3 slouží pouze pro generování příznaku, že uplynula jistá doba. Čítač byl s pomocí CubeMX nastaven s periodou 500 ms a pro znásobení času využívám podmínky s počítáním, kolikrát byla perioda zavolána. Nyní si takto generuji tick o délce 1 sekundy. Toto použití mám nachystáno pro případné možné rozšíření, kdy si takto mohu generovat více příznaků s různou délkou. Když změním periodu čítače na například 10 ms, mohu si třeba počítat přerušení od periody čítače s různými násobkami základní délky s lepším rozlišením. Což mohu stejně jako doposud využívat pro neblokující čekání. Je dobré mít na vědomí, že je rozdíl mezi přerušením od samotného časovače, kdy je volána rutina v souboru [stm32f0xx_it.c](Src/stm32f0xx_it.c) a přerušení od periody, která je násobkem. Tato rutina se nachází v souboru [timer.c](src/timer.c). Tato funkce je HAL knihovnách definovaná jak `weak`, tedy zde se přepíše mou vlastní implementací.
+Použitý časovač číslo 3 slouží pouze pro generování příznaku, že uplynula jistá doba. Čítač byl s pomocí CubeMX nastaven s periodou 500 ms a pro znásobení času využívám podmínky s počítáním, kolikrát byla perioda zavolána. Nyní si takto generuji tick o délce 1 sekundy. Toto použití mám nachystáno pro případné možné rozšíření, kdy si takto mohu generovat více příznaků s různou délkou. Když změním periodu čítače například na 10 ms, mohu si třeba počítat přerušení od periody čítače s různými násobkami základní délky s lepším rozlišením. Což mohu stejně jako doposud využívat pro neblokující čekání. Je dobré mít na vědomí, že je rozdíl mezi přerušením od samotného časovače, kdy je volána rutina v souboru [stm32f0xx_it.c](Src/stm32f0xx_it.c) a přerušení od periody, která je násobkem. Tato rutina se nachází v souboru [timer.c](src/timer.c). Tato funkce je HAL knihovnách definovaná jak `weak`, tedy zde se přepíše mou vlastní implementací.
 
-```
+```C
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance == TIM3)
@@ -283,8 +283,55 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 ```
 
-### USB komunikace
+### USB komunikace (VCP)
+Pro komunikaci s celým modulem na kterém se nachází PLO MAX2871, je použito rozhraní USB v režimu virtuálního sériového portu. (Odtud zkratka VCP - Virtual Com Port). Knihovna byla vygenerována v programu CubeMX jako middleware. 
 
+Už v [hlavním programu](#hlavní-program) byla zavolána funkce `setbuf(stdout, NULL)` Tu volám proto, abych pro odesílání dat na sériovou linku mohl využívat funkce formátovaného výstupu `printf()`. Pro dokončení přesměrování výstupu `stdout` na USB VCP je nutno využít následujícího kódu, který se v mém programu nachází v [usbd_cdc_if.c](src/usbd_cdc_if.c) ke konci v sekci `/* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */`
+
+```C
+int _write(int file, char const *buf, int n)
+{
+    // block in this endless while loop, if USB is busy
+    while (((USBD_CDC_HandleTypeDef *)(hUsbDeviceFS.pClassData))->TxState != 0){}
+    CDC_Transmit_FS((uint8_t *)(buf), n);
+    return n;
+}
+```
+Funkce v nekonečné smyčce počká, pokud bude stav linky BUSY. Po uvolnění linky zavolá funci pro odesílání dat na USB.
+
+#### Odesílání dat přes sériové rozhraní
+Data jsou odesílány v následující funkci:
+```C
+uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len)
+{
+    uint8_t result = USBD_OK;
+    /* USER CODE BEGIN 7 */
+    USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
+    result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
+    /* USER CODE END 7 */
+    return result;
+}
+```
+
+#### Příjem dat ze sériového rozhraní
+Po naplnění přijímacího bufferu se zavolá následující funkce:
+```C
+static int8_t CDC_Receive_FS(uint8_t *Buf, uint32_t *Len)
+{
+    /* USER CODE BEGIN 6 */
+    // going through the received buffer character by character
+    for (uint8_t i = 0; i < *Len; i++)
+    {
+        usb_data_available(Buf[i]);
+    }
+
+    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
+    USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+
+    return (USBD_OK);
+    /* USER CODE END 6 */
+}
+```
 
 
 

@@ -4,6 +4,8 @@ Cílem tohoto projektu je navrhnout hardware pro frekvenční syntezátor [**MAX
 * 1\. [Úvod](#Úvod)
 * 2\. [Hardwarová část](#Hardwarová-část)
     * 1.1\. [Blokové schéma](#Blokové-schéma)
+    * 1.2\. [Schéma zapojení](#schéma-zapojení)
+    * 1.3\. [Návrh plošného spoje](#Návrh-plošného-spoje)
 * 3\. [Firmware](#Firmware)
 
 ## Úvod
@@ -33,6 +35,20 @@ Navržený prototyp desky plošného spoje musí mít vysokofrekvenční trasy i
 </p>
 
 ## Firmware
-Firmware byl vyvíjen za pomocí **HAL** knihoven v prostředí **Visual Studio Code**. Nastavení tohoto prostředí je uloženo v projektové složce [.vscode](.vscode/). Základ projektu byl vygenerován programem **STM32CubeMX**.
+Firmware byl vyvíjen za pomocí **HAL** knihoven v prostředí **Visual Studio Code**. Nastavení tohoto prostředí je uloženo v projektové složce [.vscode](.vscode/). Pro krokování programu je zapotřebí doinstalovat pár rozšíření. Především nástroj [Cortex-Debug](https://github.com/Marus/cortex-debug), [ARM toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads), [OpenOCD](https://github.com/ntfreak/openocd) a [CMSIS-SVD](https://github.com/posborne/cmsis-svd). Tyto informace lze také nalézt [zde](https://github.com/wykys/STM32-tools). Základ projektu byl pak vygenerován programem **STM32CubeMX**, ve kterém jsem si nechal vygenerovat i soubor [Makefile](Makefile). V tom bylo potřeba při vytvoření vlastních .c a .h je zahrnout do překladu.
+
+### Úprava `Makefile`
+```Makefile
+C_SOURCES =  \
+..
+Src/max2871.c \
+Src/flash.c \
+Src/timer.c \
+Src/format.c \
+Src/usb.c \
+```
+Pro programování a ladění vyvíjeného programu jsem používal dev-kit [STM32F4DISCOVERY](https://www.st.com/en/evaluation-tools/stm32f4discovery.html), který obsahuje ST-LINK V2. Ten se dá jednoduše použít pro programování/ladění programu mimo vývojovou desku, po změně nastavení zkratovacích propojekt na kitu.
+
+Program byl překládán utilitou make, kterou jsem měl nainstalovánou na Linuxovém sub-systému [(WSL)](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
 

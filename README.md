@@ -18,9 +18,9 @@ Cílem tohoto projektu je navrhnout hardware pro frekvenční syntezátor [**MAX
     * 3.3.3\. [Zpracování přijatých příkazů](#3.3.3-Zpracování-přijatých-příkazů)
   * 3.4\. [Ovládání frekvenčního syntezátoru MAX2871](#3.4-Ovládání-frekvenčního-syntezátoru-MAX2871)
   * 3.5\. [Indikace zavěšení smyčky fázového závěsu PLO](#3.5-Indikace-zavěšení-smyčky-fázového-závěsu-PLO)
-* 4.\. [Video demonstrující funkci](4.-Video-demonstrující-funkci)
-* 5.\. [Závěr](5.-Závěr)
-* 6.\. [Zdroje](6.-Zdroje)
+* 4\. [Video demonstrující funkci](4.-Video-demonstrující-funkci)
+* 5\. [Závěr](5.-Závěr)
+* 6\. [Zdroje](6.-Zdroje)
 
 ## 1. Úvod
 Kmitočtové syntezátory se používají pro generování harmonických průběhů s diskrétními kmitočty odvozených z jednoho (koherentní) či více zdrojů (nekoherentní). Tato práce se zabývá návrhem nepřímého kmitočtového syntezátoru s fázovým závěsem pro mikrovlnné kmitočty. Od navrhovaného modulu syntezátoru bude předpokládán dostatečný kmitočtový krok (alespoň 10 Hz), frekvenční stabilita a v neposlední řadě univerzálnost modulu. Proto byl zvolen obvod [**MAX2871**](https://www.maximintegrated.com/en/products/comms/wireless-rf/MAX2871.html), který je řízen přes rozhraní SPI.

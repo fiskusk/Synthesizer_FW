@@ -3,10 +3,21 @@ Cílem tohoto projektu je navrhnout hardware pro frekvenční syntezátor [**MAX
 ## Obsah
 * 1\. [Úvod](#Úvod)
 * 2\. [Hardwarová část](#Hardwarová-část)
-    * 1.1\. [Blokové schéma](#Blokové-schéma)
-    * 1.2\. [Schéma zapojení](#schéma-zapojení)
-    * 1.3\. [Návrh plošného spoje](#Návrh-plošného-spoje)
+  * 2.1\. [Blokové schéma](#Blokové-schéma)
+  * 2.2\. [Schéma zapojení](#schéma-zapojení)
+  * 2.3\. [Návrh plošného spoje](#Návrh-plošného-spoje)
 * 3\. [Firmware](#Firmware)
+  * 3.1\. [Hlavní program](#Hlavní-program)
+  * 3.2\. [Autonomní režim řízení syntezátoru](Autonomní-režim-řízení-syntezátoru)
+    * 3.2.1\. [Datová paměť v oblasti paměti programu](Datová-paměť-v-oblasti-paměti-programu)
+    * 3.2.2\. [Změny pozice zkratovací propojky](Změny-pozice-zkratovací-propojky)
+    * 3.2.3\. [Použití časovače](Použití-časovače)
+  * 3.3\. [USB komunikace (VCP)](USB-komunikace-(VCP))
+    * 3.3.1\. [Odesílání příkazů přes sériové rozhraní](Odesílání-příkazů-přes-sériové-rozhraní)
+    * 3.3.2\. [Příjem dat ze sériového rozhraní](Příjem-dat-ze-sériového-rozhraní)
+    * 3.3.3\. [Zpracování přijatých příkazů](Zpracování-přijatých-příkazů)
+  * 3.4\. [Ovládání frekvenčního syntezátoru MAX2871](Ovládání-frekvenčního-syntezátoru-MAX2871)
+  * 3.5\. [Indikace zavěšení smyčky fázového závěsu PLO](Indikace-zavěšení-smyčky-fázového-závěsu-PLO)
 
 ## Úvod
 Kmitočtové syntezátory se používají pro generování harmonických průběhů s diskrétními kmitočty odvozených z jednoho (koherentní) či více zdrojů (nekoherentní). Tato práce se zabývá návrhem nepřímého kmitočtového syntezátoru s fázovým závěsem pro mikrovlnné kmitočty. Od navrhovaného modulu syntezátoru bude předpokládán dostatečný kmitočtový krok (alespoň 10 Hz), frekvenční stabilita a v neposlední řadě univerzálnost modulu. Proto byl zvolen obvod [**MAX2871**](https://www.maximintegrated.com/en/products/comms/wireless-rf/MAX2871.html), který je řízen přes rozhraní SPI.
@@ -542,9 +553,7 @@ void plo_write_register(uint32_t data)
 }
 ```
 
-Jelikož je potřeba odlišit nahrávání dat při prvním spuštění syntezátoru a při běžném provozu, vznikly následující dvě funkce. `void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)` (ta upraví vstupní data v případě, že se jedná o inicializační algoritmus) a `void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type)`. Data jsou vždy nahrávána od posledního po nultý registr. Samotný inicializační algoritmus spočívá v nahrátí kompletní posloupnosti všech šesti registrů s deaktivovaným výstupem samotného PLO (pátý a šestý bit čtvrtého registru je nastaven do logické nuly), počkání 20mms, znovu nahrání všech registrů s deaktivovaným výstupem PLO. Posledním krokem je aktivování výstupu, tedy nahráním originálního obsahu 4tého registru a ukončení funkce.
-
-Při běžném režimu se nahrají všechny registry beze změny.
+Jelikož je potřeba odlišit nahrávání dat při prvním spuštění syntezátoru a při běžném provozu, vznikly následující dvě funkce. `void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)` (ta upraví vstupní data v případě, že se jedná o inicializační algoritmus) a `void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type)`. Data jsou vždy nahrávána od posledního po nultý registr. Samotný inicializační algoritmus spočívá v nahrátí kompletní posloupnosti všech šesti registrů s deaktivovaným výstupem samotného PLO (pátý a šestý bit čtvrtého registru je nastaven do logické nuly), počkání 20mms, znovu nahrání všech registrů s deaktivovaným výstupem PLO. Posledním krokem je aktivování výstupu, tedy nahráním originálního obsahu 4tého registru a ukončení funkce. Při běžném režimu se nahrají všechny registry beze změny.
 
 ```C
 void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)

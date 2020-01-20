@@ -1,29 +1,38 @@
 # Firmware řídího mikrokontroleru pro frekvenční syntezátor *MAX2871*
 Cílem tohoto projektu je navrhnout hardware pro frekvenční syntezátor [**MAX2871**](https://www.maximintegrated.com/en/products/comms/wireless-rf/MAX2871.html) a ovládání přes rozhraní USB. Pro převodník z USB na SPI rozhraní realizující komunikaci s frekvenčním syntezátorem má být použit mikrokontrolér řady STM32F0x.
 ## Obsah
-* 1\. [Úvod](#Úvod)
-* 2\. [Hardwarová část](#Hardwarová-část)
-  * 2.1\. [Blokové schéma](#Blokové-schéma)
-  * 2.2\. [Schéma zapojení](#schéma-zapojení)
-  * 2.3\. [Návrh plošného spoje](#Návrh-plošného-spoje)
-* 3\. [Firmware](#Firmware)
-  * 3.1\. [Hlavní program](#Hlavní-program)
-  * 3.2\. [Autonomní režim řízení syntezátoru](#Autonomní-režim-řízení-syntezátoru)
-    * 3.2.1\. [Datová paměť v oblasti paměti programu](#Datová-paměť-v-oblasti-paměti-programu)
-    * 3.2.2\. [Změny pozice zkratovací propojky](#Změny-pozice-zkratovací-propojky)
-    * 3.2.3\. [Použití časovače](#Použití-časovače)
-  * 3.3\. [USB komunikace (VCP)](#USB-komunikace-(VCP))
-    * 3.3.1\. [Odesílání příkazů přes sériové rozhraní](#Odesílání-příkazů-přes-sériové-rozhraní)
-    * 3.3.2\. [Příjem dat ze sériového rozhraní](#Příjem-dat-ze-sériového-rozhraní)
-    * 3.3.3\. [Zpracování přijatých příkazů](#Zpracování-přijatých-příkazů)
-  * 3.4\. [Ovládání frekvenčního syntezátoru MAX2871](#Ovládání-frekvenčního-syntezátoru-MAX2871)
-  * 3.5\. [Indikace zavěšení smyčky fázového závěsu PLO](#Indikace-zavěšení-smyčky-fázového-závěsu-PLO)
+* 1\. [Úvod](#1.-Úvod)
+* 2\. [Hardwarová část](#2.-Hardwarová-část)
+  * 2.1\. [Blokové schéma](#2.1-Blokové-schéma)
+  * 2.2\. [Schéma zapojení](#2.2-Schéma-zapojení)
+  * 2.3\. [Návrh plošného spoje](#2.3-Návrh-plošného-spoje)
+* 3\. [Firmware](#3.-Firmware)
+  * 3.1\. [Hlavní program](#3.1-Hlavní-program)
+  * 3.2\. [Autonomní režim řízení syntezátoru](#3.2-Autonomní-režim-řízení-syntezátoru)
+    * 3.2.1\. [Datová paměť v oblasti paměti programu](#3.2.1-Datová-paměť-v-oblasti-paměti-programu)
+    * 3.2.2\. [Změny pozice zkratovací propojky](#3.2.2-Změny-pozice-zkratovací-propojky)
+    * 3.2.3\. [Použití časovače](#3.2.3-Použití-časovače)
+  * 3.3\. [USB komunikace (VCP)](#3.3-USB-komunikace-(VCP))
+    * 3.3.1\. [Odesílání příkazů přes sériové rozhraní](#3.3.1-Odesílání-příkazů-přes-sériové-rozhraní)
+    * 3.3.2\. [Příjem dat ze sériového rozhraní](#3.3.2-Příjem-dat-ze-sériového-rozhraní)
+    * 3.3.3\. [Zpracování přijatých příkazů](#3.3.3-Zpracování-přijatých-příkazů)
+  * 3.4\. [Ovládání frekvenčního syntezátoru MAX2871](#3.4-Ovládání-frekvenčního-syntezátoru-MAX2871)
+  * 3.5\. [Indikace zavěšení smyčky fázového závěsu PLO](#3.5-Indikace-zavěšení-smyčky-fázového-závěsu-PLO)
+* 4.\. [Video demonstrující funkci](4.-Video-demonstrující-funkci)
+* 5.\. [Závěr](5.-Závěr)
+* 6.\. [Zdroje](6.-Zdroje)
 
-## Úvod
+## 4. Video demonstrující funkci
+
+## 5. Závěr
+
+## 6. Zdroje
+
+## 1. Úvod
 Kmitočtové syntezátory se používají pro generování harmonických průběhů s diskrétními kmitočty odvozených z jednoho (koherentní) či více zdrojů (nekoherentní). Tato práce se zabývá návrhem nepřímého kmitočtového syntezátoru s fázovým závěsem pro mikrovlnné kmitočty. Od navrhovaného modulu syntezátoru bude předpokládán dostatečný kmitočtový krok (alespoň 10 Hz), frekvenční stabilita a v neposlední řadě univerzálnost modulu. Proto byl zvolen obvod [**MAX2871**](https://www.maximintegrated.com/en/products/comms/wireless-rf/MAX2871.html), který je řízen přes rozhraní SPI.
-## Hardwarová část
+## 2. Hardwarová část
 Deska plošného spoje byla navržena v programu KiCad. Celý projekt lze nalézt na tomto odkaze: [fiskusk/Synthesizer_HW_kicad_project_MAX2871](https://github.com/fiskusk/Synthesizer_HW_kicad_project_MAX2871)
-### Blokové schéma
+### 2.1 Blokové schéma
 Blokové schéma navrženého modulu frekvenčního syntezátoru je na následujícím obrázku. 
 <p align="center">
   <img src="/docu/images/main_block_diag.png" alt="Block diagram" width="600"/>
@@ -33,19 +42,19 @@ Napájení je umožněno buď z konektoru USB, nebo ze zdroje externího stejnos
 
 Frekvenční syntezátor ***MAX2871*** obsahuje dva výstupy. Na jednom je umístěn výstupní zesilovač, který výkonově posílí generovaný signál ve frekvenčním pásmu od 23,5 MHz do 6 GHz. Na druhém výstupu je umístěna aktivní násobička kmitočtu dvěma, která umožňuje generovat výstupní kmitočet v rozsahu od 5 GHz do 12 GHz. Signál referenčního kmitočtu lze přepínat mezi interním teplotně kompenzovaným krystalovým oscilátorem (TCXO), nebo externím, který je přiveden na konektor SMA.
 
-### Schéma zapojení
+### 2.2 Schéma zapojení
 Na následujícím obrázku je výsledné kompletní schéma zapojení. Podrobnější rozbor zapojení lze nalézt v mé [semestrální práci.](docu/semestralni_diplomova_prace_Klapil.pdf)
 
 ![Schematic](/docu/images/Synthesizer_HW_full_schematic.png "Schéma zapojení modulu frekvečního syntezátoru")
 
-### Návrh plošného spoje
+### 2.3 Návrh plošného spoje
 Navržený prototyp desky plošného spoje musí mít vysokofrekvenční trasy impedančně přizpůsobeny 50 Ω. Pro dosažení co nejlepších parametrů by bylo vhodnější použít materiál dielektrika, který má na vyšších frekvencích menší ztráty. Nicméně s ohledem na jednodušší výrobu, byl pro první prototyp zvolen matriál dielektrika FR4 s relativní permitivitou ${\epsilon}_{r}$ = 4,4 a tloušťkou 0,8 mm. Šířka vysokofrekvenčního mikropáskového vedení byla stanovena za pomoci integrovaného kalkulátoru návrhového prostředí plošných spojů KiCad na 1,65 mm.
 
 <p align="center">
   <img src="/docu/images/3d_vizualizace_s_popisky.png" alt="Block diagram" width="600" class="center"/>
 </p>
 
-## Firmware
+## 3. Firmware
 Firmware byl vyvíjen za pomocí **HAL** knihoven v prostředí **Visual Studio Code**. Nastavení tohoto prostředí je uloženo v projektové složce [.vscode](.vscode/). Pro krokování programu je zapotřebí doinstalovat pár rozšíření. Především nástroj [Cortex-Debug](https://github.com/Marus/cortex-debug), [ARM toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads), [OpenOCD](https://github.com/ntfreak/openocd) a [CMSIS-SVD](https://github.com/posborne/cmsis-svd). Tyto informace lze také nalézt [zde](https://github.com/wykys/STM32-tools). Základ projektu byl pak vygenerován programem **STM32CubeMX**, ve kterém jsem si nechal vygenerovat i soubor [Makefile](Makefile). V něm bylo potřeba zahrnout do překladu vytvořené vlastní .c a .h soubory.
 
 Úprava `Makefile`
@@ -62,7 +71,7 @@ Pro programování a ladění vyvíjeného programu jsem používal dev-kit [STM
 
 Program byl překládán utilitou make, která je nainstalována na Linuxovém sub-systému [(WSL)](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 
-### Hlavní program
+### 3.1 Hlavní program
 Hlavní program před vstupem do nekonečné smyčky provede inicializaci periferií s využitím HAL knihoven. Dále spustí časovač 3, provede část z úkonů pro přesměrování výstupu stdout na USB VCP (například pro příkaz `printf`), počká 100 ms a spustí moji inicializační rutinu `init_routine()`. V nekonečné smyčce pak volá `running_routine()`, která se věnuje obsluze hlavního programu.
 
 Inicializační rutina má za úkol při zjištění, že uživatelská paměť pro 4 nastavení syntezátoru je prázdná, nahrát defaultní hodnoty a provést inicializaci syntezátoru s respektováním vybrané pozice zkratovací propojkou.
@@ -113,10 +122,10 @@ void running_routine(void)
 }
 ```
 
-### Autonomní režim řízení syntezátoru
+### 3.2 Autonomní režim řízení syntezátoru
 Navržený modul je schopný si uchovat i po odpojení napájení 4 nastavení syntezátoru, mezi kterými lze vybírat zkratovací propojkou. Ta je umístěna na kratší hraně modulu u konektoru USB. Pro uchování nastavení i při odpojeném napájení, je nutné data uložit do paměti programu. 
 
-#### Datová paměť v oblasti paměti programu
+#### 3.2.1 Datová paměť v oblasti paměti programu
 Funkce, které zajišťují práci s programovou pamětí se nacházejí v souboru [flash.c](Src/flash.c). Dále bylo nutné upravit linker script soubor [STM32F042F6Px_FLASH.ld](STM32F042F6Px_FLASH.ld).
 
 V něm jsem nadefinoval novou oblast, kterou jsem pojmenoval `DATA`. Ta je umístěna na konci programové paměti, čímž jsem flash paměť rozdělil na dva sektory o velikosti 31 kB pro program a 1 kB pro data.
@@ -253,7 +262,7 @@ void change_plo_module_states(uint32_t control_register)
 ```
 Poslední nepopsanou funkcí, která s touto pamětí operuje, je funkce `void flash_send_stored_data(void)`. Ta jednoduše odešle obsah uživatelské paměti na USB VCP.
 
-#### Změny pozice zkratovací propojky
+#### 3.2.2 Změny pozice zkratovací propojky
 Při generování projektu v CubeMX jsem nastavil volání přerušení v případě, že dojde ke změně signálu na pinech, kde je umístěna pinová lišta pro zkratovací propojku. Přerušení se vygeneruje jak pro sestupnou tak i pro náběžnou hranu. Obsluha přerušení se nachází ve funkci `void EXTI4_15_IRQHandler(void)` v souboru [stm32f0xx_it.c](Src/stm32f0xx_it.c), který je již předpřipravený generováním kódu z CubeMX. Přerušení musí být krátké, proto se pouze nastaví příznak, že byla detekována změna `memory_select_event = MEMORY_SELECT_CHANGED` a vyresetuje se `tick_handle = TICK_NOT_OCCUR`. Což jak už bylo zmíněno, slouží k aplikaci neblokujícího čekání pro ošetření před zákmity. Tyto příznaky se pak kontrolují v hlavním programu, viz. [výše](#hlavní-program).
 
 ```C
@@ -271,7 +280,7 @@ void EXTI4_15_IRQHandler(void)
 }
 ```
 
-#### Použití časovače
+#### 3.2.3 Použití časovače
 Použitý časovač číslo 3 slouží pouze pro generování příznaku, že uplynula jistá doba. Čítač byl s pomocí CubeMX nastaven s periodou 500 ms a pro znásobení času využívám podmínky s počítáním, kolikrát byla perioda zavolána. Nyní si takto generuji tick o délce 1 sekundy. Toto použití mám nachystáno pro případné možné rozšíření, kdy si takto mohu generovat více příznaků s různou délkou. Když změním periodu čítače například na 10 ms, mohu si třeba počítat přerušení od periody čítače s různými násobkami základní délky s lepším rozlišením. Což mohu stejně jako doposud využívat pro neblokující čekání. Je dobré mít na vědomí, že je rozdíl mezi přerušením od samotného časovače, kdy je volána rutina v souboru [stm32f0xx_it.c](Src/stm32f0xx_it.c) a přerušení od periody, která je násobkem. Tato rutina se nachází v souboru [timer.c](src/timer.c). Tato funkce je HAL knihovnách definovaná jak `weak`, tedy zde se přepíše mou vlastní implementací.
 
 ```C
@@ -296,7 +305,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 ```
 
-### USB komunikace (VCP)
+### 3.3 USB komunikace (VCP)
 Pro komunikaci je použito rozhraní USB v režimu virtuálního sériového portu. (Odtud zkratka VCP - Virtual Com Port). Knihovna byla vygenerována v programu CubeMX jako middleware. Při otevření portu terminál operačního systému Windows používá CDC příkazy pro nastavení kódování linky a pak vyčítá toto nastavení zpět. Více informací lze nalézt na tomto [odkaze](https://blog.brichacek.net/wp-content/uploads/2015/10/STM32F4-and-USB.pdf). Tyto příkazy jsou zachyceny ve funkci `static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)`. Příkaz je detekován jako `cmd == CDC_SET_LINE_CODING` a `cmd == CDC_GET_LINE_CODING`. Tato funkce je také volána s příkazem `cmd == CDC_SET_CONTROL_LINE_STATE` v momentě, kdy se port otevře, případně zavře. Čehož využívám dále v kódu a stav portu si zde zachycuji. 
 ```C
 ...
@@ -346,7 +355,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)
 
 Samotné ovládání modulu syntezátoru je realizováno za pomocí jednoduchých textových příkazů.
 
-#### Odesílání příkazů přes sériové rozhraní
+#### 3.3.1 Odesílání příkazů přes sériové rozhraní
 Už v [hlavním programu](#hlavní-program) byla zavolána funkce `setbuf(stdout, NULL)` Tu volám proto, abych pro odesílání dat na sériovou linku mohl využívat funkci formátovaného výstupu `printf()`. Pro dokončení přesměrování výstupu `stdout` na USB VCP je nutno využít následujícího kódu, který se v mém programu nachází v [usbd_cdc_if.c](src/usbd_cdc_if.c) ke konci v sekci `/* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */`
 
 ```C
@@ -373,7 +382,7 @@ uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len)
 }
 ```
 
-#### Příjem dat ze sériového rozhraní
+#### 3.3.2 Příjem dat ze sériového rozhraní
 Po naplnění přijímacího bufferu se zavolá následující funkce v souboru [usbd_cdc_if.c](src/usbd_cdc_if.c):
 ```C
 static int8_t CDC_Receive_FS(uint8_t *Buf, uint32_t *Len)
@@ -425,7 +434,7 @@ void usb_data_available(uint8_t c)
 }
 ```
 Příkazy se tedy ukládají do více bufferů, mezi kterými program přepíná. Počet bufferů pro příkazy, které bude mít mikrokontroler k dispozici definuje makro `CMD_BUFFER_CNT`. Maximální počet znaků v bufferu určije makro `CMD_BUFFER_LEN`. Není ošetřen stav, kdy budou všechny zásobníky plné. Tedy příkazy z rozhraní USB budou chodit rychleji, než bude mikrokontroler schopný zpracovat. Do tohoto stavu by se totiž program teoreticky neměl dostat. Jak bude blíže rozebráno v sekci zpracování příkazů, řídící program v počítači bude po každém příkazu čekat na potvrzení zpracování dat.
-#### Zpracování přijatých příkazů
+#### 3.3.3 Zpracování přijatých příkazů
 Pokud je port otevřený, zjišťuje se v nekonečné smyčce voláním funkce `void usb_procesing_command_data(void)` v [hlavním programu](#hlavní-program), zda-li nebyl přijat nový příkaz. Pokud ano, obsah zásobníku je předán funkci `void usb_process_command(char *command_data)`, která přijatý příkaz zpracuje. Po zpracování příkazu je příznak, že zásobník obsahuje nový příkaz zrušen a je přepnuto na další zásobník. Opět je kontrolováno, zda-li v něm nenachází nový. Pokud ano, postup se opakuje. Pokud ne, funkce zde končí.
 
 Funkce zpracování všech příkazů je poměrně dlouhá, proto zde uvedu jen její část, na kterém vysvětlím princip rozdělení přijatého textového řetězce na jednotlivé příkazy.
@@ -512,7 +521,7 @@ Celá struktura všech možných příkazů, na který modul reaguje v tomto mom
 |  `plo data 3 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
 |  `plo data 4 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
 
-### Ovládání frekvenčního syntezátoru MAX2871
+### 3.4 Ovládání frekvenčního syntezátoru MAX2871
 Funkce, které zajišťují přímo komunikaci obvodem frekvenčního syntezátoru lze nalézt v souboru [max2871.c](Src/max2871.c). Použití pinů mikrokontroleru, které mají jako alternativní funkci možnost SPI rozhraní by příliš zkomplikovalo návrh designu plošného spoje. Z tohoto důvodu bylo rozhodnuto realizovat komunikaci s PLO softwarovou implementací SPI rozhraní. K tomuto účelu slouží funkce `void plo_write_register(uint32_t data)`. Na jejím samotném začátku se musí zajistit, aby byla data do syntezátoru nahrávána od nejvíce významného bitu (MSB) po nejméně významný (LSB). Za tímto účelem se volá funkce `uint32_t lsb_to_msb_bit_reversal(uint32_t input)` ze souboru [format.c](Src/format.c), kde jsem se inspiroval [zde](https://stackoverflow.com/questions/7467997/reversing-the-bits-in-an-integer-x).
 
 ```C
@@ -595,9 +604,14 @@ void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type)
 }
 ```
 
-### Indikace zavěšení smyčky fázového závěsu PLO
+### 3.5 Indikace zavěšení smyčky fázového závěsu PLO
 Frekvenční syntezátor MAX2871 obsahuje pin MUXOUT, který představuje víceúčelový pin. Jednou z funkcí je digitální detekce zavěšení smyčky fázového závěsu. Pokud jsou do příslušného registru PLO nahrána data, která nenastavují tuto funkci MUXOUT pinu, je odeslán textový řetězec `"plo state is not known\r"`. V momentě, kdy má PLO funkci MUXOUT pinu nastavenou správně a sériový port je otevřený, změna úrovně na pinu mikroprocesoru v přerušení ukládá do kruhového bufferu informaci, jaká úroveň při přerušení byla. Ta se pak v nekonečné smyčce vyčítá a podle toho se na sériový port odesílá informace buď `"plo locked\r"` a nebo `"plo isn't locked\r"`
 
+## 4. Video demonstrující funkci
+
+## 5. Závěr
+
+## 6. Zdroje
 
 
 

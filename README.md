@@ -257,7 +257,7 @@ void change_plo_module_states(uint32_t control_register)
 Poslední nepopsanou funkcí, která s touto pamětí operuje, je funkce `void flash_send_stored_data(void)`. Ta jednoduše odešle obsah uživatelské paměti na USB VCP.
 
 #### 3.2.2 Změny pozice zkratovací propojky
-Při generování projektu v CubeMX jsem nastavil volání přerušení v případě, že dojde ke změně signálu na pinech, kde je umístěna pinová lišta pro zkratovací propojku. Přerušení se vygeneruje jak pro sestupnou tak i pro náběžnou hranu. Obsluha přerušení se nachází ve funkci `void EXTI4_15_IRQHandler(void)` v souboru [stm32f0xx_it.c](Src/stm32f0xx_it.c), který je již předpřipravený generováním kódu z CubeMX. Přerušení musí být krátké, proto se pouze nastaví příznak, že byla detekována změna `memory_select_event = MEMORY_SELECT_CHANGED` a vyresetuje se `tick_handle = TICK_NOT_OCCUR`. Což jak už bylo zmíněno, slouží k aplikaci neblokujícího čekání pro ošetření před zákmity. Tyto příznaky se pak kontrolují v hlavním programu, viz. [výše](#hlavní-program).
+Při generování projektu v CubeMX jsem nastavil volání přerušení v případě, že dojde ke změně signálu na pinech, kde je umístěna pinová lišta pro zkratovací propojku. Přerušení se vygeneruje jak pro sestupnou tak i pro náběžnou hranu. Obsluha přerušení se nachází ve funkci `void EXTI4_15_IRQHandler(void)` v souboru [stm32f0xx_it.c](Src/stm32f0xx_it.c), který je již předpřipravený generováním kódu z CubeMX. Přerušení musí být krátké, proto se pouze nastaví příznak, že byla detekována změna `memory_select_event = MEMORY_SELECT_CHANGED` a vyresetuje se `tick_handle = TICK_NOT_OCCUR`. Což jak už bylo zmíněno, slouží k aplikaci neblokujícího čekání pro ošetření před zákmity. Tyto příznaky se pak kontrolují v hlavním programu, viz. [výše](#31-Hlavní-program).
 
 ```C
 void EXTI4_15_IRQHandler(void)
@@ -350,7 +350,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)
 Samotné ovládání modulu syntezátoru je realizováno za pomocí jednoduchých textových příkazů.
 
 #### 3.3.1 Odesílání příkazů přes sériové rozhraní
-Už v [hlavním programu](#hlavní-program) byla zavolána funkce `setbuf(stdout, NULL)` Tu volám proto, abych pro odesílání dat na sériovou linku mohl využívat funkci formátovaného výstupu `printf()`. Pro dokončení přesměrování výstupu `stdout` na USB VCP je nutno využít následujícího kódu, který se v mém programu nachází v [usbd_cdc_if.c](src/usbd_cdc_if.c) ke konci v sekci `/* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */`
+Už v [hlavním programu](#31-Hlavní-program) byla zavolána funkce `setbuf(stdout, NULL)` Tu volám proto, abych pro odesílání dat na sériovou linku mohl využívat funkci formátovaného výstupu `printf()`. Pro dokončení přesměrování výstupu `stdout` na USB VCP je nutno využít následujícího kódu, který se v mém programu nachází v [usbd_cdc_if.c](src/usbd_cdc_if.c) ke konci v sekci `/* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */`
 
 ```C
 int _write(int file, char const *buf, int n)
@@ -429,7 +429,7 @@ void usb_data_available(uint8_t c)
 ```
 Příkazy se tedy ukládají do více bufferů, mezi kterými program přepíná. Počet bufferů pro příkazy, které bude mít mikrokontroler k dispozici definuje makro `CMD_BUFFER_CNT`. Maximální počet znaků v bufferu určije makro `CMD_BUFFER_LEN`. Není ošetřen stav, kdy budou všechny zásobníky plné. Tedy příkazy z rozhraní USB budou chodit rychleji, než bude mikrokontroler schopný zpracovat. Do tohoto stavu by se totiž program teoreticky neměl dostat. Jak bude blíže rozebráno v sekci zpracování příkazů, řídící program v počítači bude po každém příkazu čekat na potvrzení zpracování dat.
 #### 3.3.3 Zpracování přijatých příkazů
-Pokud je port otevřený, zjišťuje se v nekonečné smyčce voláním funkce `void usb_procesing_command_data(void)` v [hlavním programu](#hlavní-program), zda-li nebyl přijat nový příkaz. Pokud ano, obsah zásobníku je předán funkci `void usb_process_command(char *command_data)`, která přijatý příkaz zpracuje. Po zpracování příkazu je příznak, že zásobník obsahuje nový příkaz zrušen a je přepnuto na další zásobník. Opět je kontrolováno, zda-li v něm nenachází nový. Pokud ano, postup se opakuje. Pokud ne, funkce zde končí.
+Pokud je port otevřený, zjišťuje se v nekonečné smyčce voláním funkce `void usb_procesing_command_data(void)` v [hlavním programu](#31-Hlavní-program), zda-li nebyl přijat nový příkaz. Pokud ano, obsah zásobníku je předán funkci `void usb_process_command(char *command_data)`, která přijatý příkaz zpracuje. Po zpracování příkazu je příznak, že zásobník obsahuje nový příkaz zrušen a je přepnuto na další zásobník. Opět je kontrolováno, zda-li v něm nenachází nový. Pokud ano, postup se opakuje. Pokud ne, funkce zde končí.
 
 Funkce zpracování všech příkazů je poměrně dlouhá, proto zde uvedu jen její část, na kterém vysvětlím princip rozdělení přijatého textového řetězce na jednotlivé příkazy.
 
@@ -510,10 +510,10 @@ Celá struktura všech možných příkazů, na který modul reaguje v tomto mom
 |     `plo set_register 12345678`     | odešle 8 hexadecimálních znaků do PLO (32. bit. registr)                          |
 |          `plo data clean`           | smaže všechna uživatelská data  uložená v programové paměti                       |
 |         `plo data stored?`          | vrátí všechna uživatelská data  uložená v programové paměti                       |
-|  `plo data 1 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
-|  `plo data 2 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
-|  `plo data 3 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
-|  `plo data 4 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 1 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#32-Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 2 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#32-Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 3 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#32-Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 4 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#32-Autonomní-režim-řízení-syntezátoru) |
 
 ### 3.4 Ovládání frekvenčního syntezátoru MAX2871
 Funkce, které zajišťují přímo komunikaci obvodem frekvenčního syntezátoru lze nalézt v souboru [max2871.c](Src/max2871.c). Použití pinů mikrokontroleru, které mají jako alternativní funkci možnost SPI rozhraní by příliš zkomplikovalo návrh designu plošného spoje. Z tohoto důvodu bylo rozhodnuto realizovat komunikaci s PLO softwarovou implementací SPI rozhraní. K tomuto účelu slouží funkce `void plo_write_register(uint32_t data)`. Na jejím samotném začátku se musí zajistit, aby byla data do syntezátoru nahrávána od nejvíce významného bitu (MSB) po nejméně významný (LSB). Za tímto účelem se volá funkce `uint32_t lsb_to_msb_bit_reversal(uint32_t input)` ze souboru [format.c](Src/format.c), kde jsem se inspiroval [zde](https://stackoverflow.com/questions/7467997/reversing-the-bits-in-an-integer-x).
@@ -604,8 +604,41 @@ Frekvenční syntezátor MAX2871 obsahuje pin MUXOUT, který představuje více�
 ## 4. Video demonstrující funkci
 
 ## 5. Závěr
+U navrženého hardwaru frekvenčního syntezátoru s obvodem MAX2871 se prozatím neprojevil žádný nedostatek a je plně funkční. Vyvinutý firmware pro řídící mikrokontroler umožňuje ovládat PLO ze čtyř  uložených předvoleb pouze za pomocí zkratovací propojky. Uživatel může uložené předvolby přes rozhraní USB vyčíst, případně zapsat nové a modul si tyto nastavené hodnoty uchová i po odpojení napájení. Rozhraní USB také umožňuje přímé ovládání PLO. Lze pomocí něj ovládat jednotlivé výstupy, přepínat signálovou referenci, syntezátor inicializovat a nahrávat jednotlivé registry do obvodu. Tímto je modul plně funkční a po osazení druhého výstupu aktivní násobičkou dvěma bude schopen generovat kmitočty až do 12 GHz. Dalším vývojem, kterým bych chtěl rozšířit možné použití modulu, je rozmítání frekvence. Případně prozkoumat možnosti, jak snížit spotřebu, kdy syntezátor není používán.
 
 ## 6. Zdroje
+- [https://www.maximintegrated.com/en/products/comms/wireless-rf/MAX2871.html](https://www.maximintegrated.com/en/products/comms/wireless-rf/MAX2871.html)
+- [https://github.com/fiskusk/Synthesizer_HW_kicad_project_MAX2871](https://github.com/fiskusk/Synthesizer_HW_kicad_project_MAX2871)
+- [docu/semestralni_diplomova_prace_Klapil.pdf](docu/semestralni_diplomova_prace_Klapil.pdf)
+- [https://github.com/Marus/cortex-debug](https://github.com/Marus/cortex-debug)
+- [https://developer.arm.com/tools-and-software/open-source-software/developer-to](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads)
+- [https://github.com/ntfreak/openocd](https://github.com/ntfreak/openocd)
+- [https://github.com/posborne/cmsis-svd](https://github.com/posborne/cmsis-svd)
+- [https://github.com/wykys/STM32-tools](https://github.com/wykys/STM32-tools)
+- [https://www.st.com/en/evaluation-tools/stm32f4discovery.html](https://www.st.com/en/evaluation-tools/stm32f4discovery.html)
+- [https://docs.microsoft.com/en-us/windows/wsl/install-win10](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+- [https://community.st.com/s/question/0D50X00009XkfIO/stm32f0-help-with-flash-to](https://community.st.com/s/question/0D50X00009XkfIO/stm32f0-help-with-flash-to-read-and-write-hal-libraries)
+- [https://www.st.com/content/ccc/resource/technical/document/reference_manual/c2](https://www.st.com/content/ccc/resource/technical/document/reference_manual/c2/f8/8a/f2/18/e6/43/96/DM00031936.pdf/files/)- [DM00031936.pdf/jcr:content/translations/en.DM00031936.pdf](DM00031936.pdf/jcr:content/translations/en.DM00031936.pdf)
+- [https://blog.brichacek.net/wp-content/uploads/2015/10/STM32F4-and-USB.pdf](https://blog.brichacek.net/wp-content/uploads/2015/10/STM32F4-and-USB.pdf)
+- [https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int/39](https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int/39394256#39394256)
+- [https://stackoverflow.com/questions/7467997/reversing-the-bits-in-an-integer-x](https://stackoverflow.com/questions/7467997/reversing-the-bits-in-an-integer-x)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

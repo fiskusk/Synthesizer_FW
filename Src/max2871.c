@@ -101,7 +101,7 @@ bool plo_buff_pop(uint8_t *out_data)
 void plo_write_register(uint32_t data)
 {
     // first reverse bits input number LSB->MSB
-    data = lsb_to_msb_bit_reversal(data);
+    data = lsb_to_msb_bit_reversal(data); // TODO myslim, že toto nebude potřeba, stačí otočit nahrávání od posledního bitu po nultý bit
     // In the cycle, it passes through the individual bits of the input number
     // and sets the data output pin accordingly. 
     // It generates a clock pulse in each cycle.

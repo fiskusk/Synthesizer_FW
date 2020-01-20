@@ -144,7 +144,9 @@ __attribute__((__section__(".user_data"))) uint32_t saved_data_4[7];
 
 Do paměti programu nelze zasahovat, dokud není odemčena HAL funkcí `HAL_FLASH_Unlock()`. Po provedení patřičných změn je zase nutné přístup k paměti uzamknout, k čemu slouží funkce `HAL_FLASH_Lock()`.
 
-Dalším nutným úkonem, bez kterého nelze data do této paměti zapisovat, je vymazání celé stránky dat, kam se data budou zapisovat. Existuje HAL funkce, která by toto měla zajišťovat. Nicméně tato funkce má nějaké chyby. Proto jsem [na tomto odkaze](https://community.st.com/s/question/0D50X00009XkfIO/stm32f0-help-with-flash-to-read-and-write-hal-libraries) našel rešení a napsal vlastní funkci pro smazání stránky v programové paměti. Do funkce vstupuje adresa začátku stránky. Paměť je rozdělena, jak již bylo několikrát zmíněno na stránky, kdy každá stránka má 1kB. Viz [tento dokument](https://www.st.com/content/ccc/resource/technical/document/reference_manual/c2/f8/8a/f2/18/e6/43/96/DM00031936.pdf/files/DM00031936.pdf/jcr:content/translations/en.DM00031936.pdf) na stránce 55.
+Dalším nutným úkonem, bez kterého nelze data do této paměti zapisovat, je vymazání celé stránky dat, kam se data budou zapisovat. Funkce pro zápis totiž nic nezapíše, dokud není obsah paměťového místa roven `0xFFFFFFFF`. Vymazáním se právě tohoto stavu docílí. Toto je tedy nutné provést i při přepisování jedné pozice paměti. Existuje HAL funkce, která by toto měla zajišťovat. Nicméně tato funkce má nějaké chyby a nefungovala mi. Proto jsem [na tomto odkaze](https://community.st.com/s/question/0D50X00009XkfIO/stm32f0-help-with-flash-to-read-and-write-hal-libraries) našel rešení a napsal vlastní funkci pro smazání stránky v programové paměti. Do funkce vstupuje adresa začátku stránky. Funkce tedy smaže celou stránku se všemi čtyrmi soubory dat. Proto je nutné při zápisu z počítače odeslat zpět kompletní obsah pro všechny čtyři soubory dat. 
+
+Paměť je rozdělena, jak již bylo několikrát zmíněno na stránky, kdy každá stránka má 1kB. Viz [tento dokument](https://www.st.com/content/ccc/resource/technical/document/reference_manual/c2/f8/8a/f2/18/e6/43/96/DM00031936.pdf/files/DM00031936.pdf/jcr:content/translations/en.DM00031936.pdf) na stránce 55.
 
 ```C
 void myFLASH_PageErase(uint32_t address)
@@ -284,9 +286,57 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 ```
 
 ### USB komunikace (VCP)
-Pro komunikaci s celým modulem na kterém se nachází PLO MAX2871, je použito rozhraní USB v režimu virtuálního sériového portu. (Odtud zkratka VCP - Virtual Com Port). Knihovna byla vygenerována v programu CubeMX jako middleware. 
+Pro komunikaci je použito rozhraní USB v režimu virtuálního sériového portu. (Odtud zkratka VCP - Virtual Com Port). Knihovna byla vygenerována v programu CubeMX jako middleware. Při otevření portu terminál operačního systému Windows používá CDC příkazy pro nastavení kódování linky a pak vyčítá toto nastavení zpět. Více informací lze nalézt na tomto [odkaze](https://blog.brichacek.net/wp-content/uploads/2015/10/STM32F4-and-USB.pdf). Tyto příkazy jsou zachyceny ve funkci `static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)`. Příkaz je detekován jako `cmd == CDC_SET_LINE_CODING` a `cmd == CDC_GET_LINE_CODING`. Tato funkce je také volána s příkazem `cmd == CDC_SET_CONTROL_LINE_STATE` v momentě, kdy se port otevře, případně zavře. Čehož využívám dále v kódu a stav portu si zde zachycuji. 
+```C
+...
+uint8_t buffer[7];
+...
+static int8_t CDC_Control_FS(uint8_t cmd, uint8_t *pbuf, uint16_t length)
+{
+    ...
+    case CDC_SET_LINE_CODING:
+        // previous stored line coding from computer (CDC_GET_LINE_CODING) load into pbuf
+        buffer[0] = pbuf[0];
+        buffer[1] = pbuf[1];
+        buffer[2] = pbuf[2];
+        buffer[3] = pbuf[3];
+        buffer[4] = pbuf[4];
+        buffer[5] = pbuf[5];
+        buffer[6] = pbuf[6];
+        break;
 
-Už v [hlavním programu](#hlavní-program) byla zavolána funkce `setbuf(stdout, NULL)` Tu volám proto, abych pro odesílání dat na sériovou linku mohl využívat funkce formátovaného výstupu `printf()`. Pro dokončení přesměrování výstupu `stdout` na USB VCP je nutno využít následujícího kódu, který se v mém programu nachází v [usbd_cdc_if.c](src/usbd_cdc_if.c) ke konci v sekci `/* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */`
+    case CDC_GET_LINE_CODING:
+        // this get line coding from computer after port open
+        pbuf[0] = buffer[0];
+        pbuf[1] = buffer[1];
+        pbuf[2] = buffer[2];
+        pbuf[3] = buffer[3];
+        pbuf[4] = buffer[4];
+        pbuf[5] = buffer[5];
+        pbuf[6] = buffer[6];
+        break;
+
+    case CDC_SET_CONTROL_LINE_STATE:
+        // this is used for get line state, if port opened or closed
+        req = (USBD_SetupReqTypedef *)pbuf;
+        if ((req->wValue & 0x0001) != 0)
+        {
+            host_com_port_open_closed = HOST_COM_PORT_OPENED;
+        }
+        else
+        {
+            memory_select_event = MEMORY_SELECT_CHANGED;
+            host_com_port_open_closed = HOST_COM_PORT_CLOSED;
+        }
+        break;
+    ...
+}
+```
+
+Samotné ovládání modulu syntezátoru je realizováno za pomocí jednoduchých textových příkazů.
+
+#### Odesílání příkazů přes sériové rozhraní
+Už v [hlavním programu](#hlavní-program) byla zavolána funkce `setbuf(stdout, NULL)` Tu volám proto, abych pro odesílání dat na sériovou linku mohl využívat funkci formátovaného výstupu `printf()`. Pro dokončení přesměrování výstupu `stdout` na USB VCP je nutno využít následujícího kódu, který se v mém programu nachází v [usbd_cdc_if.c](src/usbd_cdc_if.c) ke konci v sekci `/* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */`
 
 ```C
 int _write(int file, char const *buf, int n)
@@ -299,8 +349,7 @@ int _write(int file, char const *buf, int n)
 ```
 Funkce v nekonečné smyčce počká, pokud bude stav linky BUSY. Po uvolnění linky zavolá funci pro odesílání dat na USB.
 
-#### Odesílání dat přes sériové rozhraní
-Data jsou odesílány v následující funkci:
+Příkazy jsou odesílány v následující funkci:
 ```C
 uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len)
 {
@@ -314,7 +363,7 @@ uint8_t CDC_Transmit_FS(uint8_t *Buf, uint16_t Len)
 ```
 
 #### Příjem dat ze sériového rozhraní
-Po naplnění přijímacího bufferu se zavolá následující funkce:
+Po naplnění přijímacího bufferu se zavolá následující funkce v souboru [usbd_cdc_if.c](src/usbd_cdc_if.c):
 ```C
 static int8_t CDC_Receive_FS(uint8_t *Buf, uint32_t *Len)
 {
@@ -332,6 +381,125 @@ static int8_t CDC_Receive_FS(uint8_t *Buf, uint32_t *Len)
     /* USER CODE END 6 */
 }
 ```
+Ta po jednotlivých znacích volá funkci `void usb_data_available(uint8_t c)` ze souboru [usb.c](Src/usb.c). V ní jsou jednotlivé znaky ukládány do příkazového bufferu `cmd_buffer`. Jednotlivé příkazy mohou být odděleny znakem '\n' (LF) nebo '\r' (CR). Takto se rozpozná, že příkaz je kompletní, na jeho konec se zapíše znak `NULL` a nastaví se příznak, že buffer obsahuje kompletní ovládací instrukci. Nádledně dojde k přepnutí příkazového bufferu na druhý.
+```C
+void usb_data_available(uint8_t c)
+{
+    static uint8_t active_buff = 0;     /**< Handle actual active buffer    */
+    uint8_t *pos = &cmd_buffer[active_buff].length;
+
+    if (cmd_buffer[active_buff].received)
+        return; // Buffer not free, cannot receive data...
+
+    if (c == '\n' || c == '\r')
+    {
+        cmd_buffer[active_buff].buffer[*pos] = 0; // Add ending zero
+        cmd_buffer[active_buff].received = 1;     // Mark data in buffer as received
+        if (++active_buff >= CMD_BUFFER_CNT)      // Switch to next buffer
+            active_buff = 0;                      // No more buffers, switch to first.
+    }
+    else
+    {
+        if (*pos < (CMD_BUFFER_LEN - 1)) // 1 Byte on the end is reserved for zero
+        {
+            cmd_buffer[active_buff].buffer[*pos] = c; // Save character to buffer
+            *pos = *pos + 1;
+        }
+        else
+        {
+            //TODO: No more space in buffer, cannot store data.
+            *pos = *pos; // Useless, just for filling in the "else" branch
+        }
+    }
+}
+```
+Příkazy se tedy ukládají do více bufferů, mezi kterými program přepíná. Počet bufferů pro příkazy, které bude mít mikrokontroler k dispozici definuje makro `CMD_BUFFER_CNT`. Maximální počet znaků v bufferu určije makro `CMD_BUFFER_LEN`. Není ošetřen stav, kdy budou všechny zásobníky plné. Tedy příkazy z rozhraní USB budou chodit rychleji, než bude mikrokontroler schopný zpracovat. Do tohoto stavu by se totiž program teoreticky neměl dostat. Jak bude blíže rozebráno v sekci zpracování příkazů, řídící program v počítači bude po každém příkazu čekat na potvrzení zpracování dat.
+#### Zpracování přijatých příkazů
+Pokud je port otevřený, zjišťuje se v nekonečné smyčce voláním funkce `void usb_procesing_command_data(void)` v [hlavním programu](#hlavní-program), zda-li nebyl přijat nový příkaz. Pokud ano, obsah zásobníku je předán funkci `void usb_process_command(char *command_data)`, která přijatý příkaz zpracuje. Po zpracování příkazu je příznak, že zásobník obsahuje nový příkaz zrušen a je přepnuto na další zásobník. Opět je kontrolováno, zda-li v něm nenachází nový. Pokud ano, postup se opakuje. Pokud ne, funkce zde končí.
+
+Funkce zpracování všech příkazů je poměrně dlouhá, proto zde uvedu jen její část, na kterém vysvětlím princip rozdělení přijatého textového řetězce na jednotlivé příkazy.
+
+Jako první si deklaruji pomocné proměnné, do kterých budu postupně ukládat rozdělený text:
+```C
+char *command;      /**< Recieved command               */
+char *sub_command;  /**< Sub-command                    */
+char *value;        /**< Carry command action value     */
+char *register0;       /**< Carry register 0 value         */
+char *register1;       /**< Carry register 1 value         */
+char *register2;       /**< Carry register 2 value         */
+char *register3;       /**< Carry register 3 value         */
+char *register4;       /**< Carry register 4 value         */
+char *register5;       /**< Carry register 5 value         */
+char *module_control;       /**< Carry module controls value    */
+```
+Následně odstraním bílé znaky CR a LF, které jsou použity pro oddělení jednotlivých kompletních příkazů při příjmu.
+```C
+for (uint8_t i = 0; i < strlen(command_data); i++)
+{
+    command_data[i] = (command_data[i] < 32 || command_data[i] > 126) ? '\0' : command_data[i];
+}
+```
+Postup rozdělování lze demonstrovat na příkazu pro výběr referenčního zdroje. 
+```C
+command = strtok(command_data, " ");    // Command part parse 
+// reference selection part
+if (strcasecmp(command, "ref") == 0)
+{
+    value = strtok(NULL, " ");          // Action part parse
+    if (strcasecmp(value, "ext") == 0)
+    {
+        PLO_MODULE_EXT_REF;
+    }
+
+    else if (strcasecmp(value, "int") == 0)
+    {
+        PLO_MODULE_INT_REF;
+    }
+    printf("OK\r");                     // Sends a confirmation text string
+}
+```
+Pro oddělení prvního příkazu využívám funkce s parametry `strtok(command_data, " ")`. Prvním argumentem je zpracovávaný textový řetězec a druhým je oddělovací znak. Získaný příkaz je pak uložen do pomocné proměnné command. Takto jsem získal první příkaz. Ten v podmínce testuji, zda-li se shoduje s nějakým definovaným řetězcem, například `"ref"`. Druhý příkaz se dostane voláním stejné funkce, ovšem s následujícími parametry `strtok(NULL, " ")`. Opakovým voláním funkce s těmito parametry se pak dostávají další a další příkazy oddělené v tomto případě mezerou (pokud jsou k dispozici). Po aplikování příkazu se odešle zpět do počítače text `"OK\r"`. Pokud jsou příkazy odesílány počítačovým programem, měl by na tento řetězec počkat, než bude pokračovat ve vysílání dalších příkazů. Na jiný textový řetězec modul syntezátoru odpoví `unknown command!`.
+
+Některé příkazy zpracovávají hexadecimální výraz v textové podobě. Pro další zpracování, například uložení do programové paměti, nebo odeslání do PLO musí být tento řetězec převeden na číslo. K tomu slouží funkce `uint32_t hex2int(char *hex)` v souboru [format.c](Src/format.c). Její algoritmus byl nalezen [zde](https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int/39394256#39394256). Do funkce tedy vstupuje textový řetězec čísla v hexadecimální podobě a funkce vrátí jeho převedenou 32 bitovou hodnotu. Maximální převáděná hodnota tedy může být 8 hexadecimálních znaků / 32 bitů. 
+```
+uint32_t hex2int(char *hex)
+{
+    uint32_t val = 0;
+    while (*hex)
+    {
+        // get current character then increment
+        uint8_t byte = *hex++;
+        // transform hex character to the 4bit equivalent number, using the ascii table indexes
+        if (byte >= '0' && byte <= '9')
+            byte = byte - '0';
+        else if (byte >= 'a' && byte <= 'f')
+            byte = byte - 'a' + 10;
+        else if (byte >= 'A' && byte <= 'F')
+            byte = byte - 'A' + 10;
+        // shift 4 to make space for new digit, and add the 4 bits of the new digit
+        val = (val << 4) | (byte & 0xF);
+    }
+    return val;
+}
+```
+Celá struktura všech možných příkazů, na který modul reaguje v tomto momentě je v následujícím seznamu:
+|             **Příkaz**              |                                     **Popis**                                     | 
+|:-----------------------------------:|:----------------------------------------------------------------------------------|
+|             `ref ext`               | přepne na externí zdroj referenčního signálu                                      |
+|             `ref int`               | přepne na interní zdroj referenčního signálu                                      |
+|             `out 1 on`              | aktivuje výstupní zesilovač na 1. výstupu PLO                                     |
+|            `out 1 off`              | deaktivuje výstupní zesilovač na 1. výstupu PLO                                   |
+|             `out 2 on`              | aktivuje aktivní násobičku dvěma na 2. výstupu PLO                                |
+|            `out 2 off`              | deaktivuje aktivní násobičku dvěma na 2. výstupu PLO                              |
+|             `plo init`              | provede inicializační algoritmus nahrání testovacích dat do PLO                   |
+|     `plo set_register 12345678`     | odešle 8 hexadecimálních znaků do PLO (32. bit. registr)                          |
+|          `plo data clean`           | smaže všechna uživatelská data  uložená v programové paměti                       |
+|         `plo data stored?`          | vrátí všechna uživatelská data  uložená v programové paměti                       |
+|  `plo data 1 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 2 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 3 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 4 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
+
 
 
 

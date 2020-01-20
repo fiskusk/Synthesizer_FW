@@ -495,10 +495,10 @@ Celá struktura všech možných příkazů, na který modul reaguje v tomto mom
 |     `plo set_register 12345678`     | odešle 8 hexadecimálních znaků do PLO (32. bit. registr)                          |
 |          `plo data clean`           | smaže všechna uživatelská data  uložená v programové paměti                       |
 |         `plo data stored?`          | vrátí všechna uživatelská data  uložená v programové paměti                       |
-|  `plo data 1 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
-|  `plo data 2 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
-|  `plo data 3 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
-|  `plo data 4 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 1 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz      |
+|  `plo data 2 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz      |
+|  `plo data 3 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz      |
+|  `plo data 4 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz      |
 
 
 

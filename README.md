@@ -461,7 +461,7 @@ if (strcasecmp(command, "ref") == 0)
 Pro oddělení prvního příkazu využívám funkce s parametry `strtok(command_data, " ")`. Prvním argumentem je zpracovávaný textový řetězec a druhým je oddělovací znak. Získaný příkaz je pak uložen do pomocné proměnné command. Takto jsem získal první příkaz. Ten v podmínce testuji, zda-li se shoduje s nějakým definovaným řetězcem, například `"ref"`. Druhý příkaz se dostane voláním stejné funkce, ovšem s následujícími parametry `strtok(NULL, " ")`. Opakovým voláním funkce s těmito parametry se pak dostávají další a další příkazy oddělené v tomto případě mezerou (pokud jsou k dispozici). Po aplikování příkazu se odešle zpět do počítače text `"OK\r"`. Pokud jsou příkazy odesílány počítačovým programem, měl by na tento řetězec počkat, než bude pokračovat ve vysílání dalších příkazů. Na jiný textový řetězec modul syntezátoru odpoví `unknown command!`.
 
 Některé příkazy zpracovávají hexadecimální výraz v textové podobě. Pro další zpracování, například uložení do programové paměti, nebo odeslání do PLO musí být tento řetězec převeden na číslo. K tomu slouží funkce `uint32_t hex2int(char *hex)` v souboru [format.c](Src/format.c). Její algoritmus byl nalezen [zde](https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int/39394256#39394256). Do funkce tedy vstupuje textový řetězec čísla v hexadecimální podobě a funkce vrátí jeho převedenou 32 bitovou hodnotu. Maximální převáděná hodnota tedy může být 8 hexadecimálních znaků / 32 bitů. 
-```
+```C
 uint32_t hex2int(char *hex)
 {
     uint32_t val = 0;
@@ -496,11 +496,98 @@ Celá struktura všech možných příkazů, na který modul reaguje v tomto mom
 |     `plo set_register 12345678`     | odešle 8 hexadecimálních znaků do PLO (32. bit. registr)                          |
 |          `plo data clean`           | smaže všechna uživatelská data  uložená v programové paměti                       |
 |         `plo data stored?`          | vrátí všechna uživatelská data  uložená v programové paměti                       |
-|  `plo data 1 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
-|  `plo data 2 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
-|  `plo data 3 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
-|  `plo data 4 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 1 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 2 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 3 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
+|  `plo data 4 R0 R1 R2 R3 R4 R5 RC`  | nahraje data pro 1. paměť. R0-5 jsou reg. MAX2871, RC je registr modulu, viz [zde](#Autonomní-režim-řízení-syntezátoru) |
 
+### Ovládání frekvenčního syntezátoru MAX2871
+Funkce, které zajišťují přímo komunikaci obvodem frekvenčního syntezátoru lze nalézt v souboru [max2871.c](Src/max2871.c). Použití pinů mikrokontroleru, které mají jako alternativní funkci možnost SPI rozhraní by příliš zkomplikovalo návrh designu plošného spoje. Z tohoto důvodu bylo rozhodnuto realizovat komunikaci s PLO softwarovou implementací SPI rozhraní. K tomuto účelu slouží funkce `void plo_write_register(uint32_t data)`. Na jejím samotném začátku se musí zajistit, aby byla data do syntezátoru nahrávána od nejvíce významného bitu (MSB) po nejméně významný (LSB). Za tímto účelem se volá funkce `uint32_t lsb_to_msb_bit_reversal(uint32_t input)` ze souboru [format.c](Src/format.c), kde jsem se inspiroval [zde](https://stackoverflow.com/questions/7467997/reversing-the-bits-in-an-integer-x).
+
+```C
+uint32_t lsb_to_msb_bit_reversal(uint32_t input)
+{
+    input = (((input & 0xaaaaaaaa) >> 1) | ((input & 0x55555555) << 1));
+    input = (((input & 0xcccccccc) >> 2) | ((input & 0x33333333) << 2));
+    input = (((input & 0xf0f0f0f0) >> 4) | ((input & 0x0f0f0f0f) << 4));
+    input = (((input & 0xff00ff00) >> 8) | ((input & 0x00ff00ff) << 8));
+    return ((input >> 16) | (input << 16));
+}
+```
+
+Podle vstupních dat je v cyklu bit po bitu nastavován datový výstup a generován hodinový pulz. Po odeslání všech 32 bitů je před ukončením funkce generován pulz. Ten má za funkci, že se nahraná data v posuvném registru v PLO aplikují.
+
+```C
+void plo_write_register(uint32_t data)
+{
+    // first reverse bits input number LSB->MSB
+    data = lsb_to_msb_bit_reversal(data);
+    // In the cycle, it passes through the individual bits of the input number
+    // and sets the data output pin accordingly. 
+    // It generates a clock pulse in each cycle.
+    for (uint8_t j = 0; j < 32; j++)
+    {
+        (data & 0x01) ? PLO_DATA_SET : PLO_DATA_RESET;
+
+        // generate clock pulse and shift next
+        PLO_CLK_SET;
+        data >>= 1;
+        PLO_CLK_RESET;
+    }
+    // generate update pulse
+    PLO_LE_SET;
+    PLO_LE_RESET;
+    // get down data wire
+    PLO_DATA_RESET;
+}
+```
+
+Jelikož je potřeba odlišit nahrávání dat při prvním spuštění syntezátoru a při běžném provozu, vznikly následující dvě funkce. `void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)` (ta upraví vstupní data v případě, že se jedná o inicializační algoritmus) a `void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type)`. Data jsou vždy nahrávána od posledního po nultý registr. Samotný inicializační algoritmus spočívá v nahrátí kompletní posloupnosti všech šesti registrů s deaktivovaným výstupem samotného PLO (pátý a šestý bit čtvrtého registru je nastaven do logické nuly), počkání 20mms, znovu nahrání všech registrů s deaktivovaným výstupem PLO. Posledním krokem je aktivování výstupu, tedy nahráním originálního obsahu 4tého registru a ukončení funkce.
+
+Při běžném režimu se nahrají všechny registry beze změny.
+
+```C
+void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)
+{
+    for (int8_t i = 5; i >= 0; i--)
+    {
+        if (plo_write_type == PLO_OUT_ENABLE)
+            i = 4;
+
+        uint32_t c = max2871[i];
+
+        if ((plo_write_type == PLO_INIT) && (i == 4))
+            c &= ~((1UL << 5) | (1UL << 9));
+
+        plo_write_register(c);
+
+        if ((plo_write_type == PLO_INIT) && (i == 5))
+            HAL_Delay(20);
+
+        if (plo_write_type == PLO_OUT_ENABLE)
+            i = -1;
+    }
+}
+```
+
+```C
+void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type)
+{
+    if (plo_new_data_type == PLO_INIT)
+    {
+        plo_write_all(data, PLO_INIT);
+        plo_write_all(data, PLO_INIT);
+        plo_write_all(data, PLO_OUT_ENABLE);
+    }
+    else if (plo_new_data_type == PLO_NEW_DATA)
+    {
+        plo_write_all(data, PLO_NEW_DATA);
+    }
+}
+```
+
+### Indikace zavěšení smyčky fázového závěsu PLO
+Frekvenční syntezátor MAX2871 obsahuje pin MUXOUT, který představuje víceúčelový pin. Jednou z funkcí je digitální detekce zavěšení smyčky fázového závěsu. Pokud jsou do příslušného registru PLO nahrána data, která nenastavují tuto funkci MUXOUT pinu, je odeslán textový řetězec `"plo state is not known\r"`. V momentě, kdy má PLO funkci MUXOUT pinu nastavenou správně a sériový port je otevřený, změna úrovně na pinu mikroprocesoru v přerušení ukládá do kruhového bufferu informaci, jaká úroveň při přerušení byla. Ta se pak v nekonečné smyčce vyčítá a podle toho se na sériový port odesílá informace buď `"plo locked\r"` a nebo `"plo isn't locked\r"`
 
 
 

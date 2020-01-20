@@ -1,9 +1,15 @@
 # Firmware řídího mikrokontroleru pro frekvenční syntezátor *MAX2871*
 Cílem tohoto projektu je navrhnout hardware pro frekvenční syntezátor [**MAX2871**](https://www.maximintegrated.com/en/products/comms/wireless-rf/MAX2871.html) a ovládáním přes rozhraní USB. Pro převodník z USB na SPI rozhraní realizující komunikaci s frekvenčním syntezátorem má být použit mikrokontrolér řady STM32F0x.
+## Obsah
+* 1\. [Úvod](#Úvod)
+* 2\. [Hardwarová část](#Hardwarová-část)
+    * 1.1\. [Blokové schéma](#Blokové-schéma)
+* 3\. [Firmware](#Firmware)
+
 ## Úvod
 Kmitočtové syntezátory se používají pro generování harmonických průběhů s diskrétními kmitočty odvozených z jednoho (koherentní) či více zdrojů (nekoherentní). Tato práce se zabývá návrhem nepřímého kmitočtového syntezátoru s fázovým závěsem pro mikrovlnné kmitočty. Od navrhovaného modulu syntezátoru bude předpokládán dostatečný kmitočtový krok (alespoň 10 Hz), frekvenční stabilita a v neposlední řadě univerzálnost modulu. Proto byl zvolen obvod [**MAX2871**](https://www.maximintegrated.com/en/products/comms/wireless-rf/MAX2871.html), který je řízen přes rozhraní SPI.
 ## Hardwarová část
-Návrh hardwarové části v programu KiCad lze nalézt na tomto odkaze: [github.com/fiskusk/Synthesizer_HW_kicad_project_MAX2871](https://github.com/fiskusk/Synthesizer_HW_kicad_project_MAX2871)
+Deska plošného spoje byla navržena v programu KiCad. Celý projekt lze nalézt na tomto odkaze: [fiskusk/Synthesizer_HW_kicad_project_MAX2871](https://github.com/fiskusk/Synthesizer_HW_kicad_project_MAX2871)
 ### Blokové schéma
 Blokové schéma navrženého modulu frekvenčního syntezátoru je na následujícím obrázku. 
 <p align="center">
@@ -23,10 +29,10 @@ Na následujícím obrázku je výsledné kompletní schéma zapojení. Podrobn�
 Navržený prototyp desky plošného spoje musí mít vysokofrekvenční trasy impedančně přizpůsobeny 50 Ω. Pro dosažení co nejlepších parametrů by bylo vhodnější použít materiál dielektrika, který má na vyšších frekvencích menší ztráty. Nicméně s ohledem na jednodušší výrobu, byl pro první prototyp zvolen matriál dielektrika FR4 s relativní permitivitou ${\epsilon}_{r}$ = 4,4 a tloušťkou 0,8 mm. Šířka vysokofrekvenčního mikropáskového vedení byla stanovena za pomoci integrovaného kalkulátoru návrhového prostředí plošných spojů KiCad na 1,65 mm.
 
 <p align="center">
-  <img src="/docu/images/3d_vizualizace_s_popisky.png" alt="Block diagram" width="500" class="center"/>
+  <img src="/docu/images/3d_vizualizace_s_popisky.png" alt="Block diagram" width="600" class="center"/>
 </p>
 
 ## Firmware
-Firmware byl vyvíjen za pomocí **HAL** knihoven v prostředí **Visual Studio Code**. Nastavení tohoto prostředí je uloženo v projektové složce [.vscode](.vscode/). Základ projektu byl vygenerován za pomocí programu **STM32CubeMX**.
+Firmware byl vyvíjen za pomocí **HAL** knihoven v prostředí **Visual Studio Code**. Nastavení tohoto prostředí je uloženo v projektové složce [.vscode](.vscode/). Základ projektu byl vygenerován programem **STM32CubeMX**.
 
 

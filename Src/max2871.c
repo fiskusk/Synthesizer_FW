@@ -101,7 +101,7 @@ bool plo_buff_pop(uint8_t *out_data)
 void plo_write_register(uint32_t data)
 {
     // first reverse bits input number LSB->MSB
-    data = lsb_to_msb_bit_reversal(data); // TODO myslim, že toto nebude potřeba, stačí otočit nahrávání od posledního bitu po nultý bit
+    data = lsb_to_msb_bit_reversal(data);
     // In the cycle, it passes through the individual bits of the input number
     // and sets the data output pin accordingly. 
     // It generates a clock pulse in each cycle.
@@ -168,6 +168,8 @@ void plo_check_lock_status(void)
     // Saves the status only if the muxout pin is set correctly.
     if (((test_data[2] & ((1 << 28) | (1 << 27) | (1 << 26))) >> 26) == 0b110)
         plo_buff_push(HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin));
+    else
+        HAL_NVIC_DisableIRQ(EXTI0_1_IRQn);
 }
 
 /**

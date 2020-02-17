@@ -170,7 +170,15 @@ void usb_process_command(char *command_data)
                     // if PLO muxout pin hasn't set digital lock function
                     // set plo_lock_state to handle unknown lock state
                     if (((test_data[2] & ((1 << 28) | (1 << 27) | (1 << 26))) >> 26) != 0b110)
+                    {
                         plo_lock_state = PLO_LOCK_STATE_UNKNOWN;
+                    }
+                    else
+                    {
+                        if (!__NVIC_GetEnableIRQ(EXTI0_1_IRQn))
+                            HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
+                    }
+                    
                     break;
                 case 1:
                     test_data[1] = new_data;
@@ -193,6 +201,8 @@ void usb_process_command(char *command_data)
             if (plo_lock_state == PLO_LOCK_STATE_UNKNOWN)
             {
                 printf("plo state is not known\r");
+                if (__NVIC_GetEnableIRQ(EXTI0_1_IRQn))
+                    HAL_NVIC_DisableIRQ(EXTI0_1_IRQn);
                 plo_lock_state = PLO_LOCK_STATE_WAIT;
             }
         }

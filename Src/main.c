@@ -80,26 +80,27 @@ void running_routine(void)
 {
     switch (host_com_port_open_closed)
     {
-    case HOST_COM_PORT_OPENED:
-        PLO_MODULE_OUT2_ON; // TODO for test purpose only
+        case HOST_COM_PORT_OPENED:
+            //PLO_MODULE_OUT2_ON; // TODO for test purpose only
 
-        // check if new plo lock status occur and eventually process them
-        uint8_t data;
-        while (plo_buff_pop(&data))
-        {
-            plo_process_lock_status((bool)data);
-        }
-        // check if new usb command is ready and eventually process them.
-        usb_procesing_command_data();
-        break;
-    case HOST_COM_PORT_CLOSED:
-        PLO_MODULE_OUT2_OFF; // TODO for test purpose only
-        // if jumper possition has changed, load new setting into plo
-        if (memory_select_event == MEMORY_SELECT_CHANGED)
-            apply_memory_select_changed(PLO_NEW_DATA);
-        break;
-    default:
-        break;
+            // check if new plo lock status occur and eventually process them
+            usb_procesing_command_data();
+            
+            uint8_t data;
+            while (plo_buff_pop(&data))
+            {
+                plo_process_lock_status((bool)data);
+            }
+            // check if new usb command is ready and eventually process them.
+            break;
+        case HOST_COM_PORT_CLOSED:
+            //PLO_MODULE_OUT2_OFF; // TODO for test purpose only
+            // if jumper possition has changed, load new setting into plo
+            if (memory_select_event == MEMORY_SELECT_CHANGED)
+                apply_memory_select_changed(PLO_NEW_DATA);
+            break;
+        default:
+            break;
     }
 }
 

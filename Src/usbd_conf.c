@@ -27,7 +27,8 @@
 #include "usbd_cdc.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
+#include "stm32f0xx_it.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -204,6 +205,10 @@ void HAL_PCD_SuspendCallback(PCD_HandleTypeDef *hpcd)
     /* Set SLEEPDEEP bit and SleepOnExit of Cortex System Control Register. */
     SCB->SCR |= (uint32_t)((uint32_t)(SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk));
   }
+
+  // Serial port is closed, so set appropriate states for normal saved registers operations
+  host_com_port_open_closed = HOST_COM_PORT_CLOSED;
+  memory_select_event = MEMORY_SELECT_CHANGED;
   /* USER CODE END 2 */
 }
 

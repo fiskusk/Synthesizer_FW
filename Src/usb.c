@@ -157,6 +157,94 @@ void usb_process_command(char *command_data)
             plo_write(test_data, PLO_INIT);  
             printf("OK\r");     // Sends a confirmation text string
         }
+
+        else if (strcasecmp(sub_command, "read_reg6") == 0)
+        {
+            HAL_NVIC_DisableIRQ(EXTI0_1_IRQn); // disable interupt
+
+            if (strcasecmp(value, "vco") == 0)
+            {
+                printf("OK\r");
+
+                // get register 6
+                uint32_t reg6 = plo_read(test_data[5]);
+                // write back original test_data
+                plo_write_register(test_data[5]);
+                plo_write_register(test_data[2]);
+                // send into serial port readed value
+                printf("register6_vco %08x\r", (unsigned int)reg6);
+            }
+            else if (strcasecmp(value, "temp") == 0)
+            {
+                printf("OK\r");
+
+                // get pre-calculated reg3 with correct CDIV for ADC conversion
+                register3 = strtok(NULL, " ");
+                // convert from hex number in characters into integer number
+                uint32_t reg3_uint32 = hex2int(register3); 
+                plo_write_register(reg3_uint32);    // send reg3 into synth.
+
+                // now we need select ADC mode for temperature sensor (001)
+                uint32_t reg5 = test_data[5];
+                reg5 |= 1 << 3;
+                reg5 &= ~((1 << 4) | (1 << 5));
+                plo_write_register(reg5);       // send reg5 into synth.
+
+                // Start ADC proccess
+                reg5 |= 1 << 6;
+                plo_write_register(reg5);       // send reg5 into synth.
+
+                uint32_t reg6 = 0;
+
+                while (((reg6 & (1 << 15)) >> 15) == 0)   // check if valid ADC code
+                {
+                    reg6 = plo_read(reg5);   // read reg6 from synt.
+                }
+
+                // write into synth orig data
+                plo_write_register(test_data[5]);
+                plo_write_register(test_data[2]);
+                plo_write_register(test_data[3]);
+
+                printf("register6_temp %08x\r", (unsigned int)reg6);    // send into serial port
+            }
+            else if (strcasecmp(value, "tune") == 0)
+            {
+                printf("OK\r");
+
+                // get pre-calculated reg3 with correct CDIV for ADC conversion
+                register3 = strtok(NULL, " ");
+                // convert from hex number in characters into integer number
+                uint32_t reg3_uint32 = hex2int(register3); 
+                plo_write_register(reg3_uint32);    // send reg3 into synth.
+
+                // now we need select ADC mode for tune-pin (100)
+                uint32_t reg5 = test_data[5];
+                reg5 |= 1 << 5;
+                reg5 &= ~((1 << 3) | (1 << 4));
+                plo_write_register(reg5);       // send reg5 into synth.
+
+                // Start ADC proccess
+                reg5 |= 1 << 6;
+                plo_write_register(reg5);       // send reg5 into synth.
+
+                uint32_t reg6 = 0;
+
+                while (((reg6 & (1 << 15)) >> 15) == 0)   // check if valid ADC code
+                {
+                    reg6 = plo_read(reg5);   // read reg6 from synt.
+                }
+
+                // write into synth orig data
+                plo_write_register(test_data[5]);
+                plo_write_register(test_data[2]);
+                plo_write_register(test_data[3]);
+
+                printf("register6_tune %08x\r", (unsigned int)reg6);    // send into serial port
+            }
+            if (!__NVIC_GetEnableIRQ(EXTI0_1_IRQn))
+                    HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
+        }
         // get new register value for PLO
         else if (strcasecmp(sub_command, "set_register") == 0)
         {

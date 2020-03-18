@@ -198,6 +198,67 @@ void plo_write(uint32_t *data, plo_new_data_t plo_new_data_type)
 }
 
 /**
+  * @brief  This function read 32-bit unsigned integer number from PLO.
+  *         It read data in the order from MSB to LSB and then transfer into
+  *         correct bits order.
+  *         The function is used for software emulation of the SPI interface
+  * 
+  * @return uint32_t 32-bit readed register 6
+  */
+uint32_t plo_read_register(void)
+{
+    uint32_t readed_data = 0;
+
+    // send two clock period
+    PLO_CLK_SET;
+    PLO_CLK_RESET;
+    PLO_CLK_SET;
+    PLO_CLK_RESET;
+
+    // read in loop all 32-bits
+    for (uint8_t j = 0; j < 32; j++)
+    {
+        if (HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin))
+            readed_data |= 1 << j;
+        else
+            readed_data &= ~(1 << j);
+
+        // generate clock pulse
+        PLO_CLK_SET;
+        PLO_CLK_RESET;
+    }
+    // before finish function reverse bit order
+    return lsb_to_msb_bit_reversal(readed_data); 
+}
+
+/**
+  * @brief Function for get register 6
+  * 
+  * @param reg5 input register 5
+  * @return uint32_t output register 6
+  */
+uint32_t plo_read(uint32_t reg5)
+{
+    // set mux into reg6 read mode
+    reg5 |= (1 << 18);  
+    uint32_t reg2;
+    reg2 = test_data[2] & ~((1 << 26) | (1 << 27));
+    reg2 |= 1 << 28;
+
+    // send into synth new data for read mux pin mode
+    plo_write_register(reg5);
+    plo_write_register(reg2);
+
+    // write address for reagister 6
+    plo_write_register(0x0006);
+
+    // get register 6
+    uint32_t reg6 = plo_read_register();
+
+    return reg6;
+}
+
+/**
   * @brief The function sends a message on the serial line whether PLO lock or not
   * 
   * @param data carries info if lock (1) or not (0)

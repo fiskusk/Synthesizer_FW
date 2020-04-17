@@ -196,7 +196,7 @@ void usb_process_command(char *command_data)
 
                 uint32_t reg6 = 0;
 
-                while (((reg6 & (1 << 15)) >> 15) == 0)   // check if valid ADC code
+                while (((reg6 & (1 << 15)) >> 15) == 0 && ((test_data[2] & (1 << 5)) >> 5) == 0)   // check if valid ADC code
                 {
                     reg6 = plo_read(reg5);   // read reg6 from synt.
                 }
@@ -230,7 +230,7 @@ void usb_process_command(char *command_data)
 
                 uint32_t reg6 = 0;
 
-                while (((reg6 & (1 << 15)) >> 15) == 0)   // check if valid ADC code
+                while (((reg6 & (1 << 15)) >> 15) == 0 && ((test_data[2] & (1 << 5)) >> 5) == 0)   // check if valid ADC code
                 {
                     reg6 = plo_read(reg5);   // read reg6 from synt.
                 }

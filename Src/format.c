@@ -15,7 +15,7 @@
 /**
   * @brief  This function convert 32bits hexadecimal number (max 8 hex digits)
   *         entered as a text string to 32bits unsigned integer number.
-  * @note   https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int/39394256#39394256
+  * @note   https://stackoverflow.com/a/39052987
   * @param  hex: A hexadecimal number entered as a text string. 
   *              It supports both a-f and A-F characters.
   * @return uint32_t The resulting converted value.

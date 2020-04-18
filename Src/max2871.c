@@ -239,7 +239,7 @@ uint32_t plo_read_register(void)
   */
 uint32_t plo_read(uint32_t reg5)
 {
-    // set mux into reg6 read mode
+    // set mux pin function into reg6 read mode
     reg5 |= (1 << 18);  
     uint32_t reg2;
     reg2 = test_data[2] & ~((1 << 26) | (1 << 27));

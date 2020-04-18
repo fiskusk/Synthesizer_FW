@@ -168,7 +168,7 @@ void usb_process_command(char *command_data)
 
                 // get register 6
                 uint32_t reg6 = plo_read(test_data[5]);
-                // write back original test_data
+                // write back original test_data, restore register 5 and 2
                 plo_write_register(test_data[5]);
                 plo_write_register(test_data[2]);
                 // send into serial port readed value

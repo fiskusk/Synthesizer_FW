@@ -151,10 +151,13 @@ int main(void)
     MX_USB_DEVICE_Init();
     MX_TIM3_Init();
     /* USER CODE BEGIN 2 */
+    PLO_MODULE_OUT2_OFF;
+    PLO_MODULE_OUT1_OFF;
+
     HAL_TIM_Base_Start_IT(&htim3);  // start timer 3
     setbuf(stdout, NULL);           // it is necessary to redirect to usb
 
-    HAL_Delay(100);
+    HAL_Delay(500);
     init_routine();     // initialize user settings
 
     /* USER CODE END 2 */

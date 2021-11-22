@@ -24,7 +24,8 @@
 #define __USBD_CONF__H__
 
 #ifdef __cplusplus
- extern "C" {
+extern "C"
+{
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -63,21 +64,21 @@
   */
 
 /*---------- -----------*/
-#define USBD_MAX_NUM_INTERFACES     1
+#define USBD_MAX_NUM_INTERFACES 1
 /*---------- -----------*/
-#define USBD_MAX_NUM_CONFIGURATION     1
+#define USBD_MAX_NUM_CONFIGURATION 1
 /*---------- -----------*/
-#define USBD_MAX_STR_DESC_SIZ     256
+#define USBD_MAX_STR_DESC_SIZ 256
 /*---------- -----------*/
-#define USBD_DEBUG_LEVEL     0
+#define USBD_DEBUG_LEVEL 0
 /*---------- -----------*/
-#define USBD_SELF_POWERED     1
+#define USBD_SELF_POWERED 1
 /*---------- -----------*/
-#define MAX_STATIC_ALLOC_SIZE     512
+#define MAX_STATIC_ALLOC_SIZE 512
 
 /****************************************/
 /* #define for FS and HS identification */
-#define DEVICE_FS 		0
+#define DEVICE_FS 0
 
 /**
   * @}
@@ -91,76 +92,79 @@
 /* Memory management macros */
 
 /** Alias for memory allocation. */
-#define USBD_malloc         (uint32_t *)USBD_static_malloc
+#define USBD_malloc (uint32_t *)USBD_static_malloc
 
 /** Alias for memory release. */
-#define USBD_free           USBD_static_free
+#define USBD_free USBD_static_free
 
 /** Alias for memory set. */
-#define USBD_memset         /* Not used */
+#define USBD_memset /* Not used */
 
 /** Alias for memory copy. */
-#define USBD_memcpy         /* Not used */
+#define USBD_memcpy /* Not used */
 
 /** Alias for delay. */
-#define USBD_Delay          HAL_Delay
+#define USBD_Delay HAL_Delay
 
-/* DEBUG macros */
+    /* DEBUG macros */
 
 #if (USBD_DEBUG_LEVEL > 0)
-#define USBD_UsrLog(...)    printf(__VA_ARGS__);\
-                            printf("\n");
+#define USBD_UsrLog(...) \
+    printf(__VA_ARGS__); \
+    printf("\n");
 #else
 #define USBD_UsrLog(...)
 #endif
 
 #if (USBD_DEBUG_LEVEL > 1)
 
-#define USBD_ErrLog(...)    printf("ERROR: ") ;\
-                            printf(__VA_ARGS__);\
-                            printf("\n");
+#define USBD_ErrLog(...) \
+    printf("ERROR: ");   \
+    printf(__VA_ARGS__); \
+    printf("\n");
 #else
 #define USBD_ErrLog(...)
 #endif
 
 #if (USBD_DEBUG_LEVEL > 2)
-#define USBD_DbgLog(...)    printf("DEBUG : ") ;\
-                            printf(__VA_ARGS__);\
-                            printf("\n");
+#define USBD_DbgLog(...) \
+    printf("DEBUG : ");  \
+    printf(__VA_ARGS__); \
+    printf("\n");
 #else
 #define USBD_DbgLog(...)
 #endif
 
-/**
+    /**
   * @}
   */
 
-/** @defgroup USBD_CONF_Exported_Types USBD_CONF_Exported_Types
+    /** @defgroup USBD_CONF_Exported_Types USBD_CONF_Exported_Types
   * @brief Types.
   * @{
   */
 
-/**
+    /**
   * @}
   */
 
-/** @defgroup USBD_CONF_Exported_FunctionsPrototype USBD_CONF_Exported_FunctionsPrototype
+    /** @defgroup USBD_CONF_Exported_FunctionsPrototype USBD_CONF_Exported_FunctionsPrototype
   * @brief Declaration of public functions for Usb device.
   * @{
   */
 
-/* Exported functions -------------------------------------------------------*/
-void *USBD_static_malloc(uint32_t size);
-void USBD_static_free(void *p);
-/**
+    /* Exported functions -------------------------------------------------------*/
+    void *USBD_static_malloc(uint32_t size);
+    void USBD_static_free(void *p);
+    /**
   * @}
   */
 
-/**
+    /**
   * @}
   */
 
-/**
+    /**
   * @}
   */
 

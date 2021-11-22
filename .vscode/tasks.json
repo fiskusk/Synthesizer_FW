@@ -25,6 +25,11 @@
             "type": "shell",
             "label": "make",
             "command": "make"
+        },
+        {
+            "type": "shell",
+            "label": "clean",
+            "command": "make clean"
         }
     ]
 }

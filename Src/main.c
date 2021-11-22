@@ -145,6 +145,7 @@ int main(void)
 
   /* USER CODE END SysInit */
 
+<<<<<<< HEAD
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
@@ -153,10 +154,17 @@ int main(void)
     PLO_MODULE_OUT2_OFF;
     PLO_MODULE_OUT1_OFF;
 
+=======
+    /* Initialize all configured peripherals */
+    MX_GPIO_Init();
+    MX_USB_DEVICE_Init();
+    MX_TIM3_Init();
+    /* USER CODE BEGIN 2 */
+>>>>>>> parent of 4c90587... fix program freeze-time after device power up and force torn off all outputs
     HAL_TIM_Base_Start_IT(&htim3);  // start timer 3
     setbuf(stdout, NULL);           // it is necessary to redirect to usb
 
-    HAL_Delay(500);
+    HAL_Delay(100);
     init_routine();     // initialize user settings
 
   /* USER CODE END 2 */

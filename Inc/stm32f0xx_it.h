@@ -24,7 +24,7 @@
 
 #ifdef __cplusplus
  extern "C" {
-#endif 
+#endif
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -64,6 +64,7 @@ void PendSV_Handler(void);
 void SysTick_Handler(void);
 void EXTI0_1_IRQHandler(void);
 void EXTI4_15_IRQHandler(void);
+void ADC1_IRQHandler(void);
 void TIM3_IRQHandler(void);
 void USB_IRQHandler(void);
 /* USER CODE BEGIN EFP */

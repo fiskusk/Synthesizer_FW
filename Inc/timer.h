@@ -25,6 +25,7 @@ typedef enum{
 
 /**< Handle if tick occur or not    */
 extern tick_handle_t tick_handle;
+extern tick_handle_t three_sec_tick_handle;
 
 extern void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 

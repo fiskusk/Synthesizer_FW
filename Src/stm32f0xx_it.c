@@ -60,6 +60,7 @@ volatile memory_select_event_t memory_select_event = MEMORY_SELECT_WAIT;
 
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_FS;
+extern ADC_HandleTypeDef hadc;
 extern TIM_HandleTypeDef htim3;
 /* USER CODE BEGIN EV */
 
@@ -73,12 +74,12 @@ extern TIM_HandleTypeDef htim3;
   */
 void NMI_Handler(void)
 {
-    /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
+  /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
 
-    /* USER CODE END NonMaskableInt_IRQn 0 */
-    /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
+  /* USER CODE END NonMaskableInt_IRQn 0 */
+  /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
 
-    /* USER CODE END NonMaskableInt_IRQn 1 */
+  /* USER CODE END NonMaskableInt_IRQn 1 */
 }
 
 /**
@@ -86,14 +87,14 @@ void NMI_Handler(void)
   */
 void HardFault_Handler(void)
 {
-    /* USER CODE BEGIN HardFault_IRQn 0 */
+  /* USER CODE BEGIN HardFault_IRQn 0 */
 
-    /* USER CODE END HardFault_IRQn 0 */
-    while (1)
-    {
-        /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-        /* USER CODE END W1_HardFault_IRQn 0 */
-    }
+  /* USER CODE END HardFault_IRQn 0 */
+  while (1)
+  {
+    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
+    /* USER CODE END W1_HardFault_IRQn 0 */
+  }
 }
 
 /**
@@ -101,12 +102,12 @@ void HardFault_Handler(void)
   */
 void SVC_Handler(void)
 {
-    /* USER CODE BEGIN SVC_IRQn 0 */
+  /* USER CODE BEGIN SVC_IRQn 0 */
 
-    /* USER CODE END SVC_IRQn 0 */
-    /* USER CODE BEGIN SVC_IRQn 1 */
+  /* USER CODE END SVC_IRQn 0 */
+  /* USER CODE BEGIN SVC_IRQn 1 */
 
-    /* USER CODE END SVC_IRQn 1 */
+  /* USER CODE END SVC_IRQn 1 */
 }
 
 /**
@@ -114,12 +115,12 @@ void SVC_Handler(void)
   */
 void PendSV_Handler(void)
 {
-    /* USER CODE BEGIN PendSV_IRQn 0 */
+  /* USER CODE BEGIN PendSV_IRQn 0 */
 
-    /* USER CODE END PendSV_IRQn 0 */
-    /* USER CODE BEGIN PendSV_IRQn 1 */
+  /* USER CODE END PendSV_IRQn 0 */
+  /* USER CODE BEGIN PendSV_IRQn 1 */
 
-    /* USER CODE END PendSV_IRQn 1 */
+  /* USER CODE END PendSV_IRQn 1 */
 }
 
 /**
@@ -127,13 +128,13 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
-    /* USER CODE BEGIN SysTick_IRQn 0 */
+  /* USER CODE BEGIN SysTick_IRQn 0 */
 
-    /* USER CODE END SysTick_IRQn 0 */
-    HAL_IncTick();
-    /* USER CODE BEGIN SysTick_IRQn 1 */
+  /* USER CODE END SysTick_IRQn 0 */
+  HAL_IncTick();
+  /* USER CODE BEGIN SysTick_IRQn 1 */
 
-    /* USER CODE END SysTick_IRQn 1 */
+  /* USER CODE END SysTick_IRQn 1 */
 }
 
 /******************************************************************************/
@@ -148,14 +149,14 @@ void SysTick_Handler(void)
   */
 void EXTI0_1_IRQHandler(void)
 {
-    /* USER CODE BEGIN EXTI0_1_IRQn 0 */
+  /* USER CODE BEGIN EXTI0_1_IRQn 0 */
     if (host_com_port_open_closed == HOST_COM_PORT_OPENED)
         plo_check_lock_status(); // only if serial port opened
-    /* USER CODE END EXTI0_1_IRQn 0 */
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
-    /* USER CODE BEGIN EXTI0_1_IRQn 1 */
+  /* USER CODE END EXTI0_1_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+  /* USER CODE BEGIN EXTI0_1_IRQn 1 */
 
-    /* USER CODE END EXTI0_1_IRQn 1 */
+  /* USER CODE END EXTI0_1_IRQn 1 */
 }
 
 /**
@@ -163,15 +164,29 @@ void EXTI0_1_IRQHandler(void)
   */
 void EXTI4_15_IRQHandler(void)
 {
-    /* USER CODE BEGIN EXTI4_15_IRQn 0 */
+  /* USER CODE BEGIN EXTI4_15_IRQn 0 */
     memory_select_event = MEMORY_SELECT_CHANGED; //jumper memory select changed handle
     tick_handle = TICK_NOT_OCCUR;                // reset tick handle
-    /* USER CODE END EXTI4_15_IRQn 0 */
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
-    /* USER CODE BEGIN EXTI4_15_IRQn 1 */
+  /* USER CODE END EXTI4_15_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
+  /* USER CODE BEGIN EXTI4_15_IRQn 1 */
 
-    /* USER CODE END EXTI4_15_IRQn 1 */
+  /* USER CODE END EXTI4_15_IRQn 1 */
+}
+
+/**
+  * @brief This function handles ADC interrupt.
+  */
+void ADC1_IRQHandler(void)
+{
+  /* USER CODE BEGIN ADC1_IRQn 0 */
+
+  /* USER CODE END ADC1_IRQn 0 */
+  HAL_ADC_IRQHandler(&hadc);
+  /* USER CODE BEGIN ADC1_IRQn 1 */
+
+  /* USER CODE END ADC1_IRQn 1 */
 }
 
 /**
@@ -179,13 +194,13 @@ void EXTI4_15_IRQHandler(void)
   */
 void TIM3_IRQHandler(void)
 {
-    /* USER CODE BEGIN TIM3_IRQn 0 */
+  /* USER CODE BEGIN TIM3_IRQn 0 */
 
-    /* USER CODE END TIM3_IRQn 0 */
-    HAL_TIM_IRQHandler(&htim3);
-    /* USER CODE BEGIN TIM3_IRQn 1 */
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
 
-    /* USER CODE END TIM3_IRQn 1 */
+  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /**
@@ -193,13 +208,13 @@ void TIM3_IRQHandler(void)
   */
 void USB_IRQHandler(void)
 {
-    /* USER CODE BEGIN USB_IRQn 0 */
+  /* USER CODE BEGIN USB_IRQn 0 */
 
-    /* USER CODE END USB_IRQn 0 */
-    HAL_PCD_IRQHandler(&hpcd_USB_FS);
-    /* USER CODE BEGIN USB_IRQn 1 */
+  /* USER CODE END USB_IRQn 0 */
+  HAL_PCD_IRQHandler(&hpcd_USB_FS);
+  /* USER CODE BEGIN USB_IRQn 1 */
 
-    /* USER CODE END USB_IRQn 1 */
+  /* USER CODE END USB_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

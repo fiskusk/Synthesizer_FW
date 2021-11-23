@@ -84,7 +84,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+uint32_t temp;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

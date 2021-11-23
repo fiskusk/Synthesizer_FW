@@ -16,6 +16,7 @@
 #include "flash.h"
 #include "main.h"
 #include "stdint.h"
+#include "stm32f0xx_ll_adc.h"
 
 /** @defgroup   Command_buffer_defines
   * @brief      Defines for receive buffers
@@ -345,6 +346,19 @@ void usb_process_command(char *command_data)
         {
             printf("unknown command!\r");
         }
+    }
+    else if (strcasecmp(command, "mcu") == 0)
+    {
+        sub_command = strtok(NULL, " ");
+        if (strcasecmp(sub_command, "temp?") == 0)
+        {
+            printf("OK\r");                     // Send confirmation string
+            printf("mcu temp %d\r", __LL_ADC_CALC_TEMPERATURE(3300, temp, LL_ADC_RESOLUTION_12B));
+        }
+    }
+    else 
+    {
+        printf("unknown command!\r");
     }
 }
 

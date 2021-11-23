@@ -90,6 +90,9 @@ void running_routine(void)
         case HOST_COM_PORT_OPENED:
             //PLO_MODULE_OUT2_ON; // TODO for test purpose only
 
+            if (tick_handle == TICK_OCCUR) {
+                HAL_ADC_Start_IT(&hadc);
+            }
             // check if new plo lock status occur and eventually process them
             usb_procesing_command_data();
             
@@ -164,7 +167,6 @@ int main(void)
 
     HAL_TIM_Base_Start_IT(&htim3);  // start timer 3
     HAL_ADCEx_Calibration_Start(&hadc);
-    HAL_ADC_Start_IT(&hadc);
     setbuf(stdout, NULL);           // it is necessary to redirect to usb
 
     HAL_Delay(500);

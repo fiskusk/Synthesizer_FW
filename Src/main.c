@@ -73,6 +73,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     temp = HAL_ADC_GetValue(hadc);
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (host_com_port_open_closed == HOST_COM_PORT_OPENED && GPIO_Pin == GPIO_PIN_1)
+        plo_check_lock_status(); // only if serial port opened
+}
+
 /**
   * @brief  Function that call in while endless loop. Check, if serial port was 
   *         open or was close.

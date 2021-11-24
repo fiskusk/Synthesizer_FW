@@ -16,6 +16,7 @@
 
 volatile plo_lock_state_t plo_lock_state = PLO_LOCK_STATE_WAIT;
 volatile plo_new_data_t plo_new_data;
+volatile uint32_t numberOfBufferOverflows = 0;
 
 /** @defgroup   PLO_Synthesizer_SPI_controls
   * @brief      PLO Synthesizer SPI pins Controls Private Macros
@@ -61,10 +62,10 @@ plo_state_t plo_state = {0};
   * 
   * @param in_data input data to storing into buffer
   */
-void plo_buff_push(bool in_data)
+bool plo_buff_push(bool in_data)
 {
     if ((plo_state.incnt + 1) % 32 == plo_state.outcnt)
-        return; // Buffer is full. Cannot store more data
+        return false; // Buffer is full. Cannot store more data
 
     if (in_data)
         plo_state.buffer |= (1UL << plo_state.incnt); // Save logic 1 to buffer
@@ -72,6 +73,7 @@ void plo_buff_push(bool in_data)
         plo_state.buffer &= ~(1UL << plo_state.incnt); // Save logic 0 to buffer
 
     plo_state.incnt = (plo_state.incnt + 1) % 32; // Move "in" pointer
+    return true;
 }
 
 /**
@@ -166,8 +168,11 @@ void plo_write_all(uint32_t *max2871, plo_new_data_t plo_write_type)
 void plo_check_lock_status(void)
 {
     // Saves the status only if the muxout pin is set correctly.
-    if (((test_data[2] & ((1 << 28) | (1 << 27) | (1 << 26))) >> 26) == 0b110)
-        plo_buff_push(HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin));
+    if (((test_data[2] & ((1 << 28) | (1 << 27) | (1 << 26))) >> 26) == 0b110) {
+        bool success = plo_buff_push(HAL_GPIO_ReadPin(PLO_MUXOUT_GPIO_Port, PLO_MUXOUT_Pin));
+        if (success == false)
+            numberOfBufferOverflows++;
+    }
     else
         HAL_NVIC_DisableIRQ(EXTI0_1_IRQn);
 }
